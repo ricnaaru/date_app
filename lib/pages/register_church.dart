@@ -15,16 +15,16 @@ import 'package:pit_components/components/controllers/adv_text_field_controller.
 import 'package:pit_components/mods/mod_checkbox.dart';
 import 'package:pit_components/pit_components.dart';
 
-class RegisterChurch extends StatefulWidget {
+class RegisterChurchPage extends StatefulWidget {
   final VoidCallback onCompleted;
 
-  RegisterChurch({this.onCompleted});
+  RegisterChurchPage({this.onCompleted});
 
   @override
-  State<StatefulWidget> createState() => _RegisterChurchState();
+  State<StatefulWidget> createState() => _RegisterChurchPageState();
 }
 
-class _RegisterChurchState extends AdvState<RegisterChurch> {
+class _RegisterChurchPageState extends AdvState<RegisterChurchPage> {
   bool _haveBeenBaptized = false;
   AdvTextFieldController _baptismChurchCtrl;
   AdvDatePickerController _baptismDateCtrl;

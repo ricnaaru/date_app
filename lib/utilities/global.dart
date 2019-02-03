@@ -5,6 +5,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:pit_components/components/adv_text.dart';
+
+final RegExp emojiRegex = RegExp(
+    r"(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])");
 
 const String loremIpsum =
     "You think water moves fast? You should see ice. It moves like it has a mind. Like it knows it killed the world once and got a taste for murder. After the avalanche, it took us a week to climb out. Now, I don't know exactly when we turned on each other, but I know that seven of us survived the slide... and only five made it out. Now we took an oath, that I'm breaking now. We said we'd say it was the snow that killed the other two, but it wasn't. Nature is lethal but it doesn't hold a candle to man.";
@@ -27,6 +31,7 @@ class CompanyColors {
     800: const Color(0xff9FD3D3),
     900: const Color(0xff95C9C9)
   };
+
 //  static const Map<int, Color> primaryColorList = const <int, Color>{
 //    50: const Color(0xffFFE997),
 //    100: const Color(0xffFDDD8B),
@@ -53,6 +58,7 @@ class CompanyColors {
     800: const Color(0xff16892C),
     900: const Color(0xff087F23)
   };
+
 //  static const Map<int, Color> accentColorList = const <int, Color>{
 //    50: const Color(0xffFFFFEA),
 //    100: const Color(0xffFEFFDD),
@@ -126,6 +132,7 @@ void showSnackBar(BuildContext context, String message, {int displayTime}) {
   );
 
   try {
+    Scaffold.of(context).hideCurrentSnackBar();
     Scaffold.of(context).showSnackBar(snackBar);
   } catch (e) {
     print("showSnackBar error ${e}");
@@ -139,7 +146,7 @@ String dateFormat(date) {
   return formatted;
 }
 
-String dateFormatRange(DateTime start, DateTime end){
+String dateFormatRange(DateTime start, DateTime end) {
   var formatter = DateFormat('MMM dd yyyy');
   String dateStart = formatter.format(start);
   String dateEnd = formatter.format(end);
@@ -163,3 +170,46 @@ String dateFormatRange(DateTime start, DateTime end){
 //    ),
 //  );
 //}
+
+Widget handleEmoji(String input, {TextStyle style}) {
+  style ??= TextStyle(color: Colors.black, fontSize: 14.0);
+
+  int lastEmojiIndex = 0;
+  int emojiIndex = input.indexOf(emojiRegex);
+  List<TextSpan> textSpans = [];
+
+  while (emojiIndex >= 0) {
+    textSpans.add(TextSpan(text: input.substring(lastEmojiIndex, emojiIndex), style: style));
+
+    String emojis = "";
+
+    for (int i = emojiIndex; i < input.length; i++) {
+      String currentLetter = input.substring(i, i + 1);
+
+      //check for surrogates emoji
+      if (RegExp(r"[\ud800-\udbff]|[\udc00-\udfff]").hasMatch(currentLetter)) {
+        String currentLetter2 = i == input.length - 1 ? "" : input.substring(i + 1, i + 2);
+        if (RegExp(r"[\ud800-\udbff]|[\udc00-\udfff]").hasMatch(currentLetter2)) {
+          emojis = "$emojis$currentLetter$currentLetter2";
+          i++;
+        }
+      } else {
+        if (!emojiRegex.hasMatch(currentLetter)) {
+          lastEmojiIndex = i;
+          emojiIndex = i;
+          break;
+        } else {
+          emojis = "$emojis${input.substring(i, i + 1)}";
+        }
+      }
+    }
+
+    textSpans.add(TextSpan(text: emojis, style: style.copyWith(fontSize: style.fontSize * 0.85)));
+
+    emojiIndex = input.indexOf(emojiRegex, emojiIndex);
+  }
+
+  textSpans.add(TextSpan(text: input.substring(lastEmojiIndex, input.length), style: style));
+
+  return Text.rich(TextSpan(children: textSpans), overflow: TextOverflow.ellipsis, maxLines: 3,);
+}

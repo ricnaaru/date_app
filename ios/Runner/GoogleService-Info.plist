@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AD_UNIT_ID_FOR_BANNER_TEST</key>
+	<string>ca-app-pub-3940256099942544/2934735716</string>
+	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
+	<string>ca-app-pub-3940256099942544/4411468910</string>
+	<key>CLIENT_ID</key>
+	<string>476982417788-pk7abm7oeg5k1e8c4cj2v8187mlkgt53.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.476982417788-pk7abm7oeg5k1e8c4cj2v8187mlkgt53</string>
+	<key>API_KEY</key>
+	<string>AIzaSyBNkAokyXk386lbS2fcwt_kf6JTtf7SZLw</string>
+	<key>GCM_SENDER_ID</key>
+	<string>476982417788</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>ric.com.dateApp</string>
+	<key>PROJECT_ID</key>
+	<string>dateapp-6ebae</string>
+	<key>STORAGE_BUCKET</key>
+	<string>dateapp-6ebae.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<true></true>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<false></false>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:476982417788:ios:45ba40082a5a8ae7</string>
+	<key>DATABASE_URL</key>
+	<string>https://dateapp-6ebae.firebaseio.com</string>
+</dict>
+</plist>

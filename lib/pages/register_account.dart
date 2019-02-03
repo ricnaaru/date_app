@@ -6,16 +6,16 @@ import 'package:pit_components/components/adv_state.dart';
 import 'package:pit_components/components/adv_text_field.dart';
 import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 
-class RegisterAccount extends StatefulWidget {
+class RegisterAccountPage extends StatefulWidget {
   final VoidCallback onCompleted;
 
-  RegisterAccount({this.onCompleted});
+  RegisterAccountPage({this.onCompleted});
 
   @override
-  State<StatefulWidget> createState() => _RegisterAccountState();
+  State<StatefulWidget> createState() => _RegisterAccountPageState();
 }
 
-class _RegisterAccountState extends AdvState<RegisterAccount> {
+class _RegisterAccountPageState extends AdvState<RegisterAccountPage> {
   AdvTextFieldController _usernameCtrl;
   AdvTextFieldController _passwordCtrl;
 

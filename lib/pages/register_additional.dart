@@ -15,16 +15,16 @@ import 'package:pit_components/components/controllers/adv_increment_controller.d
 import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 import 'package:date_app/utilities/textstyles.dart' as ts;
 
-class RegisterAdditional extends StatefulWidget {
+class RegisterAdditionalPage extends StatefulWidget {
   final VoidCallback onCompleted;
 
-  RegisterAdditional({this.onCompleted});
+  RegisterAdditionalPage({this.onCompleted});
 
   @override
-  State<StatefulWidget> createState() => _RegisterAdditionalState();
+  State<StatefulWidget> createState() => _RegisterAdditionalPageState();
 }
 
-class _RegisterAdditionalState extends AdvState<RegisterAdditional> {
+class _RegisterAdditionalPageState extends AdvState<RegisterAdditionalPage> {
   AdvRadioGroupController _professionCtrl;
   String _student;
   String _employee;

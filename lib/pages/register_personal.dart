@@ -11,16 +11,16 @@ import 'package:pit_components/components/controllers/adv_chooser_controller.dar
 import 'package:pit_components/components/controllers/adv_date_picker_controller.dart';
 import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 
-class RegisterPersonal extends StatefulWidget {
+class RegisterPersonalPage extends StatefulWidget {
   final VoidCallback onCompleted;
 
-  RegisterPersonal({this.onCompleted});
+  RegisterPersonalPage({this.onCompleted});
 
   @override
-  State<StatefulWidget> createState() => _RegisterPersonalState();
+  State<StatefulWidget> createState() => _RegisterPersonalPageState();
 }
 
-class _RegisterPersonalState extends AdvState<RegisterPersonal> {
+class _RegisterPersonalPageState extends AdvState<RegisterPersonalPage> {
   AdvTextFieldController _nameCtrl;
   AdvDatePickerController _dateOfBirthCtrl;
   AdvChooserController _maritalStatusCtrl;

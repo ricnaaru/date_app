@@ -1,5 +1,7 @@
 import 'package:date_app/application.dart';
-import 'package:date_app/pages/home.dart';
+import 'package:date_app/pages/home_container.dart';
+import 'package:date_app/pages/register.dart';
+import 'package:date_app/utilities/assets.dart';
 import 'package:date_app/utilities/global.dart' as global;
 import 'package:date_app/utilities/localization.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +37,7 @@ class _DateAppState extends State<DateApp> {
     PitComponents.datePickerTodayColor = global.systemGreenColor;
     PitComponents.groupCheckCheckColor = global.systemPrimaryColor;
     PitComponents.radioButtonColor = global.systemPrimaryColor;
+    PitComponents.loadingAssetName = Assets.hLoading;
 
     return prefs;
   }
@@ -57,7 +60,7 @@ class _DateAppState extends State<DateApp> {
               final String localeString =
                   (prefs.getString(global.locale) ?? "en");
               _locale = Locale(localeString);
-              _widget = DateAppHome();
+              _widget = DateAppHome();//RegisterPage();
             }
 
             return MaterialApp(
