@@ -8,6 +8,6 @@ class CommunityPage extends StatefulWidget {
 class _CommunityPageState extends State<CommunityPage> {
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text("Account!"));
+    return Center(child: Text("Community!"));
   }
 }
