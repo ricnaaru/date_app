@@ -7,22 +7,26 @@ import 'package:pit_components/components/adv_row.dart';
 class AdvDialog extends StatelessWidget {
   final String title;
   final Widget content;
+  final WillPopCallback onWillPop;
 
-  AdvDialog({this.title, this.content});
+  AdvDialog({this.title, this.content, this.onWillPop});
 
   @override
   Widget build(BuildContext context) {
+    double maxHeight = MediaQuery.of(context).size.height;
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4.0)),
       child: Container(
-        constraints: BoxConstraints(minHeight: 24.0),
+        constraints:
+            BoxConstraints(minHeight: 24.0, maxHeight: maxHeight * 0.6),
         margin: EdgeInsets.all(16.0),
         child: AdvColumn(
           mainAxisSize: MainAxisSize.min,
           divider: Container(
             color: Colors.black54,
             height: 0.5,
-            margin: EdgeInsets.symmetric(vertical: 8.0),
+            margin: EdgeInsets.only(top: 8.0),
           ),
           children: [
             AdvRow(children: [
@@ -31,8 +35,9 @@ class AdvDialog extends StatelessWidget {
               ),
               InkWell(
                 child: Icon(Icons.close, color: global.systemRedColor),
-                onTap: () {
-                  Navigator.pop(context);
+                onTap: () async {
+                  if (onWillPop != null && await onWillPop())
+                    Navigator.pop(context);
                 },
               )
             ]),

@@ -10,7 +10,7 @@ description: DATE (What our community called) App
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.1.0 <3.0.0"
+  sdk: ">=2.0.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -21,11 +21,13 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
-  pit_components: ^0.1.0+1
+  pit_components: ^0.2.0
   shared_preferences: "^0.4.3"
-  firebase_database: ^1.1.0
   cached_network_image: ^0.5.1
   url_launcher: ^5.0.0
+  firebase_database: 1.0.5
+  firebase_core: 0.2.5+1
+  flutter_list_drag_and_drop: ^0.1.6
 
 dev_dependencies:
   flutter_test:

@@ -48,12 +48,117 @@ class EventItem {
     assert(untilAnotherDate == null ||
         (untilAnotherDate?.difference(otherDate)?.inDays ?? 0) >= 0);
 
+    return this.endTime == null
+        ? _matchSingleDate(otherDate,
+            untilAnotherDate: untilAnotherDate,
+            alwaysEndOfMonth: alwaysEndOfMonth)
+        : _matchRangeDate(otherDate,
+            untilAnotherDate: untilAnotherDate,
+            alwaysEndOfMonth: alwaysEndOfMonth);
+  }
+
+  bool _matchSingleDate(DateTime otherDate,
+      {DateTime untilAnotherDate, bool alwaysEndOfMonth = true}) {
+    assert(untilAnotherDate == null ||
+        (untilAnotherDate?.difference(otherDate)?.inDays ?? 0) >= 0);
+
+    /// harusnya ceknya dari daily dulu karena kalo ada yg daily sampe tgl >= tgl yg dicek, artinya ada event
+    /// kedua dari once, kalo tanggalnya sama, brrt ada event
+    /// ketiga dari monthly, kalo tanggalnya sama, berarti ada event
+    /// keempat dari annual, kalo bulan dan tanggalnya sama, berarti ada event
+    /// kelima dari weekly atau custom, karena harus ada kalkulasi dulu
+    ///
+    /// so the best thing is populate masing2 ke type period dulu, baru dimatch
+
+    DateTime currentStart = clearTime(this.startTime);
+    DateTime otherStart = otherDate = clearTime(otherDate);
+    DateTime otherEnd = clearTime(untilAnotherDate ?? otherDate);
+
+    if (otherStart.difference(currentStart).inDays < 0 &&
+        otherEnd.difference(currentStart).inDays < 0) return false;
+
+    switch (this.eventPeriod) {
+      case EventPeriod.once:
+        return !(currentStart.difference(otherStart).inDays < 0) &&
+            !(currentStart.difference(otherEnd).inDays > 0);
+      case EventPeriod.daily:
+        return true;
+      case EventPeriod.weekly:
+        if (!(currentStart.difference(otherStart).inDays < 0) &&
+            !(currentStart.difference(otherEnd).inDays > 0)) return true;
+
+        int diffFromStart = otherStart.difference(currentStart).inDays;
+
+        DateTime nearestStart =
+            currentStart.add(Duration(days: (diffFromStart / 7).floor() * 7));
+
+        return !(nearestStart.difference(otherStart).inDays < 0) &&
+            !(nearestStart.difference(otherEnd).inDays > 0);
+
+        break;
+      case EventPeriod.monthly:
+        DateTime nearestStart;
+        int startLastDay =
+            getLastDay(DateTime(otherStart.year, otherStart.month, 1));
+        if (currentStart.day > startLastDay) {
+          if (alwaysEndOfMonth) {
+            nearestStart =
+                DateTime(otherStart.year, otherStart.month, startLastDay);
+          } else {
+            if (this.endTime == null) {
+              return false;
+            } else {
+              nearestStart =
+                  DateTime(otherStart.year, otherStart.month, startLastDay + 1);
+            }
+          }
+        } else {
+          nearestStart =
+              DateTime(otherStart.year, otherStart.month, (currentStart.day));
+        }
+
+        return !(nearestStart.difference(otherStart).inDays < 0) &&
+            !(nearestStart.difference(otherEnd).inDays > 0);
+      case EventPeriod.annual:
+        DateTime nearestStart;
+        int startLastDay =
+            getLastDay(DateTime(otherStart.year, currentStart.month, 1));
+        if (currentStart.day > startLastDay) {
+          if (alwaysEndOfMonth) {
+            nearestStart =
+                DateTime(otherStart.year, currentStart.month, startLastDay);
+          } else {
+            if (this.endTime == null) {
+              return false;
+            } else {
+              nearestStart = DateTime(
+                  otherStart.year, currentStart.month, startLastDay + 1);
+            }
+          }
+        } else {
+          nearestStart =
+              DateTime(otherStart.year, currentStart.month, (currentStart.day));
+        }
+
+        return !(nearestStart.difference(otherStart).inDays < 0) &&
+            !(nearestStart.difference(otherEnd).inDays > 0);
+    }
+
+    return false;
+  }
+
+  bool _matchRangeDate(DateTime otherDate,
+      {DateTime untilAnotherDate, bool alwaysEndOfMonth = true}) {
+    assert(untilAnotherDate == null ||
+        (untilAnotherDate?.difference(otherDate)?.inDays ?? 0) >= 0);
+
     DateTime currentStart = clearTime(this.startTime);
     DateTime currentEnd = clearTime(this.endTime ?? this.startTime);
     DateTime otherStart = otherDate = clearTime(otherDate);
     DateTime otherEnd = clearTime(untilAnotherDate ?? otherDate);
 
-    if (otherStart.difference(currentStart).inDays < 0) return false;
+    if (otherStart.difference(currentStart).inDays < 0 &&
+        otherEnd.difference(currentStart).inDays < 0) return false;
 
     switch (this.eventPeriod) {
       case EventPeriod.once:
@@ -84,7 +189,8 @@ class EventItem {
         break;
       case EventPeriod.monthly:
         DateTime nearestStart;
-        int startLastDay = getLastDay(DateTime(otherStart.year, otherStart.month, 1));
+        int startLastDay =
+            getLastDay(DateTime(otherStart.year, otherStart.month, 1));
         if (currentStart.day > startLastDay) {
           if (alwaysEndOfMonth) {
             nearestStart =
@@ -105,8 +211,7 @@ class EventItem {
         int endLastDay = getLastDay(DateTime(otherEnd.year, otherEnd.month, 1));
         if (currentEnd.day > endLastDay) {
           if (alwaysEndOfMonth) {
-            nearestEnd =
-                DateTime(otherEnd.year, otherEnd.month, endLastDay);
+            nearestEnd = DateTime(otherEnd.year, otherEnd.month, endLastDay);
           } else {
             if (this.endTime == null) {
               return false;
@@ -126,7 +231,8 @@ class EventItem {
                 nearestEnd.difference(otherEnd).inDays > 0);
       case EventPeriod.annual:
         DateTime nearestStart;
-        int startLastDay = getLastDay(DateTime(otherStart.year, currentStart.month, 1));
+        int startLastDay =
+            getLastDay(DateTime(otherStart.year, currentStart.month, 1));
         if (currentStart.day > startLastDay) {
           if (alwaysEndOfMonth) {
             nearestStart =
@@ -135,8 +241,8 @@ class EventItem {
             if (this.endTime == null) {
               return false;
             } else {
-              nearestStart =
-                  DateTime(otherStart.year, currentStart.month, startLastDay + 1);
+              nearestStart = DateTime(
+                  otherStart.year, currentStart.month, startLastDay + 1);
             }
           }
         } else {
@@ -144,11 +250,11 @@ class EventItem {
               DateTime(otherStart.year, currentStart.month, (currentStart.day));
         }
         DateTime nearestEnd;
-        int endLastDay = getLastDay(DateTime(otherEnd.year, currentEnd.month, 1));
+        int endLastDay =
+            getLastDay(DateTime(otherEnd.year, currentEnd.month, 1));
         if (currentEnd.day > endLastDay) {
           if (alwaysEndOfMonth) {
-            nearestEnd =
-                DateTime(otherEnd.year, currentEnd.month, endLastDay);
+            nearestEnd = DateTime(otherEnd.year, currentEnd.month, endLastDay);
           } else {
             if (this.endTime == null) {
               return false;
@@ -163,10 +269,12 @@ class EventItem {
         }
 
         return !(nearestStart.difference(otherStart).inDays < 0 &&
-            nearestEnd.difference(otherEnd).inDays < 0) &&
+                nearestEnd.difference(otherEnd).inDays < 0) &&
             !(nearestStart.difference(otherStart).inDays > 0 &&
                 nearestEnd.difference(otherEnd).inDays > 0);
     }
+
+    return false;
   }
 
   DateTime clearTime(DateTime source) {
@@ -198,6 +306,11 @@ class EventItem {
     }
     return lastDay;
   }
+
+  @override
+  String toString() {
+    return "EventItem($name)";
+  }
 }
 
 class EventPage extends StatefulWidget {
@@ -208,6 +321,8 @@ class EventPage extends StatefulWidget {
 }
 
 class EventPageState extends AdvState<EventPage> {
+  GlobalKey<DailyCalendarCarouselState> _carouselKey = GlobalKey<DailyCalendarCarouselState>();
+
   List<EventItem> eventItems = [
     EventItem.birthday(
         name: "Michelle Deborah Lusikooy", startTime: DateTime(1984, 2, 16)),
@@ -239,23 +354,20 @@ class EventPageState extends AdvState<EventPage> {
     EventItem.birthday(name: "Stevvani", startTime: DateTime(1989, 9, 17)),
     EventItem.birthday(
         name: "Yohanna Meilina", startTime: DateTime(1985, 5, 5)),
+    EventItem(
+        name: "Bawa Makan", startTime: DateTime(2019, 5, 5)),
   ];
 
   @override
   void initStateWithContext(BuildContext context) {
     super.initStateWithContext(context);
 
-    DateTime n = DateTime.now();
-
-    print(
-        "nahh => ${DateTime(2019, 1, 29).difference(DateTime(2019, 6, 4)).inDays}");
-
     DateDict dict = DateDict.of(context);
 
     List<EventItem> holidays = [
       EventItem.holiday(
           name: dict.getString("chinese_new_year"),
-          startTime: DateTime(2019, 2, 4)),
+          startTime: DateTime(2019, 2, 5)),
       EventItem.annualHoliday(
           name: dict.getString("new_year"), startTime: DateTime(2019, 1, 1)),
       EventItem.holiday(
@@ -300,7 +412,9 @@ class EventPageState extends AdvState<EventPage> {
   Widget advBuild(BuildContext context) {
     return SafeArea(
       child: DailyCalendarCarousel(
+        key: _carouselKey,
         weekDays: PitComponents.weekdaysArray,
+        events: eventItems,
         onDayPressed: (DateTime date) {
 //        if (_datePicked) return;
 //        _datePicked = true;
@@ -321,7 +435,6 @@ class EventPageState extends AdvState<EventPage> {
         thisMonthDayBorderColor: Colors.grey,
         selectedDateTime: DateTime.now(),
         daysHaveCircularBorder: false,
-        markedDates: [],
 //        minDateTime: DateTime(2000, 11, 1),
 //        maxDateTime: DateTime(2050, 2, 31),
       ),
@@ -329,6 +442,6 @@ class EventPageState extends AdvState<EventPage> {
   }
 
   void onFabTapped() {
-    print("Event here!");
+    _carouselKey.currentState.onFabTapped();
   }
 }

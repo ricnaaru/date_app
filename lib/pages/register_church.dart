@@ -1,3 +1,5 @@
+import 'package:date_app/components/adv_checkbox_with_text.dart';
+import 'package:date_app/components/roundrect_checkbox.dart';
 import 'package:date_app/utilities/localization.dart';
 import 'package:flutter/material.dart';
 import 'package:date_app/utilities/global.dart' as global;
@@ -69,26 +71,12 @@ class _RegisterChurchPageState extends AdvState<RegisterChurchPage> {
                 divider: ColumnDivider(8.0),
                 children: [
                   Container(height: 40.0),
-                  InkWell(
-                    child: AdvRow(children: [
-                      Container(
-                          child: RoundCheckbox(
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                              activeColor: global.systemPrimaryColor,
-                              onChanged: (bool value) {
-                                setState(() {
-                                  _haveBeenBaptized = value;
-                                });
-                              },
-                              value: _haveBeenBaptized),
-                          margin: EdgeInsets.all(8.0)),
-                      Expanded(
-                          child: Text(dict.getString("i_have_been_baptized"))),
-                    ]),
-                    onTap: () {
+                  AdvCheckboxWithText(
+                    text: dict.getString("i_have_been_baptized"),
+                    value: _haveBeenBaptized,
+                    onChanged: (bool value) {
                       setState(() {
-                        _haveBeenBaptized = !_haveBeenBaptized;
+                        _haveBeenBaptized = value;
                       });
                     },
                   ),

@@ -1,3 +1,5 @@
+import 'package:date_app/components/adv_checkbox_with_text.dart';
+import 'package:date_app/components/adv_chooser_dialog.dart';
 import 'package:date_app/utilities/localization.dart';
 import 'package:flutter/material.dart';
 import 'package:date_app/utilities/global.dart' as global;
@@ -5,6 +7,7 @@ import 'package:pit_components/components/adv_button.dart';
 import 'package:pit_components/components/adv_chooser.dart';
 import 'package:pit_components/components/adv_column.dart';
 import 'package:pit_components/components/adv_date_picker.dart';
+import 'package:pit_components/components/adv_group_check.dart';
 import 'package:pit_components/components/adv_state.dart';
 import 'package:pit_components/components/adv_text_field.dart';
 import 'package:pit_components/components/controllers/adv_chooser_controller.dart';
@@ -27,19 +30,25 @@ class _RegisterPersonalPageState extends AdvState<RegisterPersonalPage> {
   AdvTextFieldController _addressCtrl;
   AdvTextFieldController _emailCtrl;
   AdvTextFieldController _phoneNumberCtrl;
+  bool _showBirthday = true;
 
   @override
   void initStateWithContext(BuildContext context) {
     super.initStateWithContext(context);
     DateDict dict = DateDict.of(context);
+    Map<String, String> maritalStatus = dict.getMap("marital_status");
+    List<GroupCheckItem> groupItems = [];
+
+    maritalStatus.forEach((key, value) {
+      groupItems.add(GroupCheckItem(key, value));
+    });
 
     _nameCtrl =
         AdvTextFieldController(label: dict.getString("name"), maxLines: 1);
     _dateOfBirthCtrl =
         AdvDatePickerController(label: dict.getString("date_of_birth"));
     _maritalStatusCtrl = AdvChooserController(
-        label: dict.getString("marital_status"),
-        items: dict.getMap("marital_status"));
+        label: dict.getString("marital_status"), items: groupItems);
     _addressCtrl = AdvTextFieldController(label: dict.getString("address"));
     _emailCtrl =
         AdvTextFieldController(label: dict.getString("email"), maxLines: 1);
@@ -60,22 +69,29 @@ class _RegisterPersonalPageState extends AdvState<RegisterPersonalPage> {
             Expanded(
               child: SingleChildScrollView(
                   child: AdvColumn(
-                    divider: ColumnDivider(8.0),
-                    children: [
-                      Container(height: 40.0),
-                      AdvTextField(controller: _nameCtrl),
-                      AdvDatePicker(
-                        controller: _dateOfBirthCtrl,
-                        onChanged: (List value) {
-                          _dateOfBirthCtrl.initialValue = value.first;
-                        },
-                      ),
-                      AdvTextField(controller: _addressCtrl),
-                      AdvChooser(controller: _maritalStatusCtrl),
-                      AdvTextField(controller: _emailCtrl),
-                      AdvTextField(controller: _phoneNumberCtrl),
-                    ],
-                  )),
+                divider: ColumnDivider(8.0),
+                children: [
+                  Container(height: 40.0),
+                  AdvTextField(controller: _nameCtrl),
+                  AdvDatePicker(
+                    controller: _dateOfBirthCtrl,
+                    onChanged: (List value) {
+                      _dateOfBirthCtrl.initialValue = value.first;
+                    },
+                  ),
+                  AdvCheckboxWithText(
+                    text: dict.getString("show_age"),
+                    value: _showBirthday,
+                    onChanged: (bool value) {
+                      _showBirthday = value;
+                    },
+                  ),
+                  AdvTextField(controller: _addressCtrl),
+                  AdvChooserDialog(controller: _maritalStatusCtrl),
+                  AdvTextField(controller: _emailCtrl),
+                  AdvTextField(controller: _phoneNumberCtrl),
+                ],
+              )),
             ),
             AdvButton(
               dict.getString("next"),

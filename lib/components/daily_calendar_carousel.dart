@@ -1,20 +1,23 @@
 import 'package:date_app/pages/event.dart';
+import 'package:date_app/pages/event_detail.dart';
 import 'package:date_app/utilities/global.dart';
+import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/utilities/routing.dart';
+import 'package:date_app/utilities/string_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
-import 'dart:ui' as ui;
 
 /// A Calculator.
 import 'package:intl/intl.dart' show DateFormat;
-import 'package:pit_components/components/adv_button.dart';
 import 'package:pit_components/components/adv_column.dart';
-import 'package:pit_components/components/adv_date_picker.dart';
 import 'package:pit_components/components/adv_row.dart';
 import 'package:pit_components/components/adv_visibility.dart';
 import 'package:pit_components/consts/textstyles.dart' as ts;
 import 'package:pit_components/pit_components.dart';
 import 'package:pit_components/utils/utils.dart';
+
+/// A Calculator.
 
 /// A Calculator.
 
@@ -29,32 +32,24 @@ enum PickType {
 }
 
 class CalendarStyle {
-  final TextStyle defaultHeaderTextStyle =
-      ts.fs20.copyWith(color: PitComponents.datePickerHeaderColor);
-  final TextStyle defaultPrevDaysTextStyle =
-      ts.fs14.copyWith(color: PitComponents.datePickerPrevDaysColor);
-  final TextStyle defaultNextDaysTextStyle =
-      ts.fs14.copyWith(color: PitComponents.datePickerNextDaysDaysColor);
-  final TextStyle defaultDaysTextStyle =
-      ts.fs14.copyWith(color: PitComponents.datePickerWeekdayColor);
-  final TextStyle defaultTodayTextStyle =
-      ts.fs14.copyWith(color: PitComponents.datePickerTodayTextColor);
-  final TextStyle defaultSelectedDayTextStyle =
-      ts.fs14.copyWith(color: PitComponents.datePickerSelectedTextColor);
-  final TextStyle daysLabelTextStyle =
-      ts.fs14.copyWith(color: PitComponents.datePickerDaysLabelColor);
-  final TextStyle defaultNotesTextStyle =
-      ts.fs14.copyWith(color: PitComponents.datePickerMarkedDaysDaysColor);
-  final TextStyle defaultWeekendTextStyle =
-      ts.fs14.copyWith(color: PitComponents.datePickerWeekendColor);
-  final Widget defaultMarkedDateWidget = Positioned(
+  final TextStyle defaultHeaderTextStyle = ts.fs20.copyWith(color: PitComponents.datePickerHeaderColor);
+  final TextStyle defaultPrevDaysTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerPrevDaysColor);
+  final TextStyle defaultNextDaysTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerNextDaysDaysColor);
+  final TextStyle defaultDaysTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerWeekdayColor);
+  final TextStyle defaultTodayTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerTodayTextColor);
+  final TextStyle defaultSelectedDayTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerSelectedTextColor);
+  final TextStyle daysLabelTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerDaysLabelColor);
+  final TextStyle defaultNotesTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerMarkedDaysDaysColor);
+  final TextStyle defaultWeekendTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerWeekendColor);
+  final Widget defaultMarkedDateWidget = Align(
+    alignment: Alignment.bottomCenter,
     child: Container(
-      color: PitComponents.datePickerMarkedDaysDaysColor,
+      color: Colors.red,
+      //PitComponents.datePickerMarkedDaysDaysColor,
       height: 4.0,
       width: 4.0,
+      margin: EdgeInsets.only(bottom: 4.0),
     ),
-    bottom: 4.0,
-    left: 18.0,
   );
   final Color todayBorderColor = PitComponents.datePickerTodayColor;
   final Color todayButtonColor = PitComponents.datePickerTodayColor;
@@ -94,21 +89,14 @@ class CalendarStyle {
 class DailyCalendarCarousel extends StatefulWidget {
   final DateTime selectedDateTime;
   final Function(DateTime) onDayPressed;
-  final List<MarkedDate> markedDates;
   final CalendarStyle calendarStyle;
   final DateTime minDateTime;
   final DateTime maxDateTime;
+  final List<EventItem> events;
 
   DailyCalendarCarousel({
-    List<String> weekDays = const [
-      'Sun',
-      'Mon',
-      'Tue',
-      'Wed',
-      'Thur',
-      'Fri',
-      'Sat'
-    ],
+    Key key,
+    List<String> weekDays = const ['Sun', 'Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat'],
     double viewportFraction = 1.0,
     Color prevMonthDayBorderColor = Colors.transparent,
     Color thisMonthDayBorderColor = Colors.transparent,
@@ -119,13 +107,13 @@ class DailyCalendarCarousel extends StatefulWidget {
     bool daysHaveCircularBorder,
     this.onDayPressed,
     Color iconColor = Colors.blueAccent,
-    List<MarkedDate> markedDates = const [],
+    List<EventItem> events = const [],
     EdgeInsets headerMargin = const EdgeInsets.symmetric(vertical: 16.0),
     double childAspectRatio = 1.0,
     EdgeInsets weekDayMargin = const EdgeInsets.only(bottom: 4.0),
     this.minDateTime,
     this.maxDateTime,
-  })  : this.markedDates = markedDates ?? const [],
+  })  : this.events = events ?? const [],
         this.calendarStyle = CalendarStyle(
           weekDays: weekDays,
           viewportFraction: viewportFraction,
@@ -139,14 +127,14 @@ class DailyCalendarCarousel extends StatefulWidget {
           headerMargin: headerMargin,
           childAspectRatio: childAspectRatio,
           weekDayMargin: weekDayMargin,
-        );
+        ),
+        super(key: key);
 
   @override
-  _DailyCalendarCarouselState createState() => _DailyCalendarCarouselState();
+  DailyCalendarCarouselState createState() => DailyCalendarCarouselState();
 }
 
-class _DailyCalendarCarouselState extends State<DailyCalendarCarousel>
-    with TickerProviderStateMixin {
+class DailyCalendarCarouselState extends State<DailyCalendarCarousel> with TickerProviderStateMixin {
   GlobalKey<DayCalendarState> _dayKey = GlobalKey<DayCalendarState>();
   GlobalKey<MonthCalendarState> _monthKey = GlobalKey<MonthCalendarState>();
   GlobalKey<YearCalendarState> _yearKey = GlobalKey<YearCalendarState>();
@@ -156,12 +144,8 @@ class _DailyCalendarCarouselState extends State<DailyCalendarCarousel>
   @override
   void initState() {
     super.initState();
-    _dayMonthAnim = AnimationController(
-        duration: Duration(milliseconds: _kAnimationDuration), vsync: this);
-    _monthYearAnim = AnimationController(
-        duration: Duration(milliseconds: _kAnimationDuration),
-        vsync: this,
-        value: 1.0);
+    _dayMonthAnim = AnimationController(duration: Duration(milliseconds: _kAnimationDuration), vsync: this);
+    _monthYearAnim = AnimationController(duration: Duration(milliseconds: _kAnimationDuration), vsync: this, value: 1.0);
   }
 
   @override
@@ -173,8 +157,8 @@ class _DailyCalendarCarouselState extends State<DailyCalendarCarousel>
 
   @override
   Widget build(BuildContext context) {
-    DateTime _selectedDateTime = DateTime(widget.selectedDateTime.year,
-        widget.selectedDateTime.month, widget.selectedDateTime.day);
+    DateTime _selectedDateTime =
+        DateTime(widget.selectedDateTime.year, widget.selectedDateTime.month, widget.selectedDateTime.day);
     List<Widget> children = [
       YearCalendar(
         mainContext: context,
@@ -183,7 +167,7 @@ class _DailyCalendarCarouselState extends State<DailyCalendarCarousel>
         calendarStyle: widget.calendarStyle,
         monthYearAnim: _monthYearAnim,
         selectedDateTime: _selectedDateTime,
-        markedDates: widget.markedDates,
+        events: widget.events,
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
       ),
@@ -197,7 +181,7 @@ class _DailyCalendarCarouselState extends State<DailyCalendarCarousel>
         monthYearAnim: _monthYearAnim,
         selectedDateTime: _selectedDateTime,
         onDayPressed: widget.onDayPressed,
-        markedDates: widget.markedDates,
+        events: widget.events,
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
       ),
@@ -209,13 +193,17 @@ class _DailyCalendarCarouselState extends State<DailyCalendarCarousel>
         dayMonthAnim: _dayMonthAnim,
         selectedDateTime: _selectedDateTime,
         onDayPressed: widget.onDayPressed,
-        markedDates: widget.markedDates,
+        events: widget.events,
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
       ),
     ];
 
     return Stack(children: children);
+  }
+
+  void onFabTapped() {
+    _dayKey.currentState.onFabTapped();
   }
 }
 
@@ -224,7 +212,7 @@ class DayCalendar extends StatefulWidget {
   final GlobalKey<MonthCalendarState> monthKey;
   final AnimationController dayMonthAnim;
   final CalendarStyle calendarStyle;
-  final List<MarkedDate> markedDates;
+  final List<EventItem> events;
   final DateTime selectedDateTime;
   final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
@@ -236,7 +224,7 @@ class DayCalendar extends StatefulWidget {
     this.monthKey,
     this.dayMonthAnim,
     this.calendarStyle,
-    this.markedDates,
+    this.events,
     this.selectedDateTime,
     this.onDayPressed,
     this.minDateTime,
@@ -247,8 +235,7 @@ class DayCalendar extends StatefulWidget {
   DayCalendarState createState() => DayCalendarState();
 }
 
-class DayCalendarState extends State<DayCalendar>
-    with TickerProviderStateMixin {
+class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin {
   /// The first run, this will be shown (0.0 [widget.dayMonthAnim]'s value)
   ///
   /// When this title is tapped [_handleDayTitleTapped], we will give this the
@@ -284,7 +271,7 @@ class DayCalendarState extends State<DayCalendar>
   Tween<Rect> rectTween;
 
   AnimationController _listAnimation;
-  List<EventItem> events;
+  List<EventItem> selectedDateEvents;
 
   @override
   initState() {
@@ -292,8 +279,7 @@ class DayCalendarState extends State<DayCalendar>
 
     /// Whenever day to month animation is finished, reset rectTween to null
     widget.dayMonthAnim.addListener(() {
-      if (widget.dayMonthAnim.status == AnimationStatus.completed ||
-          widget.dayMonthAnim.status == AnimationStatus.dismissed) {
+      if (widget.dayMonthAnim.status == AnimationStatus.completed || widget.dayMonthAnim.status == AnimationStatus.dismissed) {
         rectTween = null;
       }
     });
@@ -301,26 +287,22 @@ class DayCalendarState extends State<DayCalendar>
     _selectedDateTime = widget.selectedDateTime;
 
     /// setup pageController
-    _pageCtrl = PageController(
-      initialPage: 1,
-      keepPage: true,
-      viewportFraction: widget.calendarStyle.viewportFraction,
-    );
+    _pageCtrl = PageController(initialPage: 1, keepPage: true, viewportFraction: widget.calendarStyle.viewportFraction);
 
     /// set _pageDates for the first time
     this._setPage();
 
-    _listAnimation =
-        AnimationController(duration: Duration(milliseconds: 500), vsync: this);
+    _listAnimation = AnimationController(duration: Duration(milliseconds: 500), vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (events != null) _listAnimation.forward();
+      if (selectedDateEvents != null) _listAnimation.forward();
     });
   }
 
   @override
   dispose() {
     _pageCtrl.dispose();
+    _listAnimation.dispose();
     super.dispose();
   }
 
@@ -334,10 +316,7 @@ class DayCalendarState extends State<DayCalendar>
         builder: (BuildContext context, Widget child) {
           if (rectTween == null)
             return AdvVisibility(
-                visibility: widget.dayMonthAnim.value == 1.0
-                    ? VisibilityFlag.gone
-                    : VisibilityFlag.visible,
-                child: dayContent);
+                visibility: widget.dayMonthAnim.value == 1.0 ? VisibilityFlag.gone : VisibilityFlag.visible, child: dayContent);
 
           /// rect tween set when one of these two occasions occurs
           /// 1. Day Title tapped so it has to be squeezed inside month boxes
@@ -350,8 +329,7 @@ class DayCalendarState extends State<DayCalendar>
           final Rect destRect = rectTween.evaluate(widget.dayMonthAnim);
 
           /// minus padding for each horizontal and vertical axis
-          final Size destSize = Size(
-              destRect.size.width - (widget.calendarStyle.dayPadding * 2),
+          final Size destSize = Size(destRect.size.width - (widget.calendarStyle.dayPadding * 2),
               destRect.size.height - (widget.calendarStyle.dayPadding * 2));
           final double top = destRect.top + widget.calendarStyle.dayPadding;
           final double left = destRect.left + widget.calendarStyle.dayPadding;
@@ -360,8 +338,7 @@ class DayCalendarState extends State<DayCalendar>
           double yFactor = destSize.height / rectTween.begin.height;
 
           /// scaling the content inside
-          final Matrix4 transform = Matrix4.identity()
-            ..scale(xFactor, yFactor, 1.0);
+          final Matrix4 transform = Matrix4.identity()..scale(xFactor, yFactor, 1.0);
 
           /// keep the initial size, so we can achieve destination scale
           /// example :
@@ -374,13 +351,14 @@ class DayCalendarState extends State<DayCalendar>
               width: rectTween.begin.width,
               height: rectTween.begin.height,
               left: left,
-              child: Opacity(
-                  opacity: 1.0 - widget.dayMonthAnim.value,
-                  child: Transform(transform: transform, child: dayContent)));
+              child:
+                  Opacity(opacity: 1.0 - widget.dayMonthAnim.value, child: Transform(transform: transform, child: dayContent)));
         });
   }
 
   Widget _buildDayContent(BuildContext context) {
+    DateDict dict = DateDict.of(context);
+
     return Column(
       children: <Widget>[
         AdvRow(
@@ -433,7 +411,7 @@ class DayCalendarState extends State<DayCalendar>
             },
             controller: _pageCtrl,
             itemBuilder: (context, index) {
-              return _buildCalendar(index);
+              return _buildCalendar(dict, index);
             },
           ),
         ),
@@ -441,9 +419,7 @@ class DayCalendarState extends State<DayCalendar>
     );
   }
 
-  ScrollController sc = ScrollController();
-
-  _buildCalendar(int slideIndex) {
+  _buildCalendar(DateDict dict, int slideIndex) {
     int totalItemCount = DateTime(
           this._pageDates[slideIndex].year,
           this._pageDates[slideIndex].month + 1,
@@ -456,30 +432,42 @@ class DayCalendarState extends State<DayCalendar>
 
     List<Widget> children = [];
 
-    DateTime startDate = DateTime(this._pageDates[slideIndex].year,
-        this._pageDates[slideIndex].month, 1 - this._startWeekday[slideIndex]);
+    DateTime startDate =
+        DateTime(this._pageDates[slideIndex].year, this._pageDates[slideIndex].month, 1 - this._startWeekday[slideIndex]);
 
     DateTime endDate = DateTime(
-        this._pageDates[slideIndex].year,
-        this._pageDates[slideIndex].month,
-        totalItemCount - this._startWeekday[slideIndex]);
-    if (_selectedDateTime.difference(startDate) >= Duration.zero &&
-        _selectedDateTime.difference(endDate) <= Duration.zero) {
-      if (events == null &&
-          _selectedDateTime != null &&
-          widget.onDayPressed != null) {
-        events = widget.onDayPressed(_selectedDateTime);
+        this._pageDates[slideIndex].year, this._pageDates[slideIndex].month, totalItemCount - this._startWeekday[slideIndex]);
+
+    List<EventItem> thisMonth = [];
+
+    for (EventItem item in widget.events) {
+      if (item.matchDate(startDate, untilAnotherDate: endDate)) {
+        thisMonth.add(item);
+      }
+    }
+
+    if (_selectedDateTime.difference(startDate) >= Duration.zero && _selectedDateTime.difference(endDate) <= Duration.zero) {
+      if (selectedDateEvents == null && _selectedDateTime != null && widget.onDayPressed != null) {
+        List<EventItem> newEventItems = [];
+
+        for (EventItem item in widget.events) {
+          if (item.matchDate(_selectedDateTime)) {
+            newEventItems.add(item);
+          }
+        }
+
+        selectedDateEvents?.clear();
+        selectedDateEvents = newEventItems;
       }
 
-      int totalPortion = (events?.length ?? 1).clamp(1, 5);
+      int totalPortion = (selectedDateEvents?.length ?? 1).clamp(1, 5);
 
-      for (int i = 0; i < (events?.length ?? 0); i++) {
+      for (int i = 0; i < (selectedDateEvents?.length ?? 0); i++) {
         double beginPortion = (i * (1.0 / totalPortion)).clamp(0.0, 0.8);
         double endPortion = ((i + 1) * (1.0 / totalPortion)).clamp(0.0, 1.0);
 
         Widget widget = SlideTransition(
-            position: Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset.zero)
-                .animate(
+            position: Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset.zero).animate(
               CurvedAnimation(
                 parent: _listAnimation,
                 curve: Interval(
@@ -500,11 +488,15 @@ class DayCalendarState extends State<DayCalendar>
                   ),
                 ),
               ),
-              child: _buildEventCard(events[i]),
+              child: _buildEventCard(dict, selectedDateEvents[i]),
             ));
 
         children.add(widget);
       }
+    }
+
+    if (children.length == 0) {
+      children.add(Center(child: Material(color: Colors.transparent, child: Text(dict.getString("no_event")))));
     }
 
     /// build calendar and marked dates notes
@@ -516,17 +508,14 @@ class DayCalendarState extends State<DayCalendar>
           childAspectRatio: widget.calendarStyle.childAspectRatio,
           padding: EdgeInsets.zero,
           children: List.generate(totalItemCount, (index) {
-            DateTime currentDate = DateTime(
-                year, month, index + 1 - this._startWeekday[slideIndex]);
+            DateTime currentDate = DateTime(year, month, index + 1 - this._startWeekday[slideIndex]);
             bool isToday = DateTime.now().day == currentDate.day &&
                 DateTime.now().month == currentDate.month &&
                 DateTime.now().year == currentDate.year;
             bool isSelectedDay = _selectedDateTime == currentDate;
 
             bool isPrevMonthDay = index < this._startWeekday[slideIndex];
-            bool isNextMonthDay = index >=
-                (DateTime(year, month + 1, 0).day) +
-                    this._startWeekday[slideIndex];
+            bool isNextMonthDay = index >= (DateTime(year, month + 1, 0).day) + this._startWeekday[slideIndex];
             bool isThisMonthDay = !isPrevMonthDay && !isNextMonthDay;
 
             TextStyle textStyle;
@@ -539,12 +528,8 @@ class DayCalendarState extends State<DayCalendar>
             } else if (isThisMonthDay) {
               textStyle = isSelectedDay
                   ? widget.calendarStyle.defaultSelectedDayTextStyle
-                  : isToday
-                      ? widget.calendarStyle.defaultTodayTextStyle
-                      : widget.calendarStyle.defaultDaysTextStyle;
-              borderColor = isToday
-                  ? widget.calendarStyle.todayBorderColor
-                  : widget.calendarStyle.nextMonthDayBorderColor;
+                  : isToday ? widget.calendarStyle.defaultTodayTextStyle : widget.calendarStyle.defaultDaysTextStyle;
+              borderColor = isToday ? widget.calendarStyle.todayBorderColor : widget.calendarStyle.nextMonthDayBorderColor;
             } else if (isNextMonthDay) {
               textStyle = isSelectedDay
                   ? widget.calendarStyle.defaultSelectedDayTextStyle
@@ -553,102 +538,103 @@ class DayCalendarState extends State<DayCalendar>
             }
 
             Color boxColor;
-            if (isSelectedDay &&
-                widget.calendarStyle.selectedDayButtonColor != null) {
+            if (isSelectedDay && widget.calendarStyle.selectedDayButtonColor != null) {
               boxColor = widget.calendarStyle.selectedDayButtonColor;
-            } else if (isToday &&
-                widget.calendarStyle.todayBorderColor != null) {
+            } else if (isToday && widget.calendarStyle.todayBorderColor != null) {
               boxColor = widget.calendarStyle.todayButtonColor;
             } else {
               boxColor = widget.calendarStyle.dayButtonColor;
             }
 
             int currentDateLong = currentDate.millisecondsSinceEpoch;
-            int minDateLong =
-                widget.minDateTime?.millisecondsSinceEpoch ?? currentDateLong;
-            int maxDateLong =
-                widget.maxDateTime?.millisecondsSinceEpoch ?? currentDateLong;
-            bool availableDate = currentDateLong >= minDateLong &&
-                currentDateLong <= maxDateLong;
-            TextStyle fixedTextStyle =
-                (index % 7 == 0 || index % 7 == 6) && !isSelectedDay && !isToday
-                    ? widget.calendarStyle.defaultWeekendTextStyle
-                    : isToday
-                        ? widget.calendarStyle.defaultTodayTextStyle
-                        : textStyle;
+            int minDateLong = widget.minDateTime?.millisecondsSinceEpoch ?? currentDateLong;
+            int maxDateLong = widget.maxDateTime?.millisecondsSinceEpoch ?? currentDateLong;
+            bool availableDate = currentDateLong >= minDateLong && currentDateLong <= maxDateLong;
+            TextStyle fixedTextStyle = (index % 7 == 0 || index % 7 == 6) && !isSelectedDay && !isToday
+                ? widget.calendarStyle.defaultWeekendTextStyle
+                : isToday ? widget.calendarStyle.defaultTodayTextStyle : textStyle;
 
             return Container(
               margin: EdgeInsets.all(widget.calendarStyle.dayPadding),
               child: IgnorePointer(
                 ignoring: !availableDate,
                 child: FlatButton(
-                  color: availableDate
-                      ? boxColor
-                      : Color.lerp(systemGreyColor, boxColor, 0.8),
+                  color: availableDate ? boxColor : Color.lerp(systemGreyColor, boxColor, 0.8),
                   onPressed: () => _handleDayBoxTapped(currentDate),
                   padding: EdgeInsets.all(widget.calendarStyle.dayPadding),
                   shape: (widget.calendarStyle.daysHaveCircularBorder ?? false)
                       ? CircleBorder(side: BorderSide(color: borderColor))
-                      : RoundedRectangleBorder(
-                          side: BorderSide(color: borderColor)),
+                      : RoundedRectangleBorder(side: BorderSide(color: borderColor)),
                   child: Stack(children: <Widget>[
                     Center(
                       child: Text(
                         '${currentDate.day}',
                         style: availableDate
                             ? fixedTextStyle
-                            : fixedTextStyle.copyWith(
-                                color: Color.lerp(systemGreyColor,
-                                    fixedTextStyle.color, 0.5)),
+                            : fixedTextStyle.copyWith(color: Color.lerp(systemGreyColor, fixedTextStyle.color, 0.5)),
                         maxLines: 1,
                       ),
                     ),
-                    _renderMarked(currentDate),
+                    _renderMarked(thisMonth, currentDate),
                   ]),
                 ),
               ),
             );
           }),
         ),
-        Visibility(
-            visible: widget.markedDates
-                    .where((markedDate) =>
-                        markedDate.date.month == month &&
-                        markedDate.date.year == year)
-                    .toList()
-                    .length >
-                0,
-            child: Container(
-              child: Text(
-                PitComponents.datePickerMarkedDatesTitle,
-                style: ts.fs16.merge(ts.fw700),
-              ),
-              width: double.infinity,
-              padding: EdgeInsets.only(top: 8.0, bottom: 4.0),
-            )),
         Expanded(
+          child: Hero(
+            tag: "dailyDetail",
             child: Container(
-          width: double.infinity,
-          color: Color.lerp(systemGreyColor, Colors.white, 0.7),
-          child: SingleChildScrollView(
-              controller: sc,
-              child: AdvColumn(
-                  divider: ColumnDivider(8.0),
-                  margin: EdgeInsets.symmetric(vertical: 16.0),
-                  children: children)),
-        )),
+              width: double.infinity,
+              color: Colors.transparent,
+              child: SingleChildScrollView(
+                  child:
+                      AdvColumn(divider: ColumnDivider(8.0), margin: EdgeInsets.symmetric(vertical: 16.0), children: children)),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildEventCard(EventItem item) {
+  Widget _buildEventCard(DateDict dict, EventItem item) {
+    IconData icon;
+    String text;
+
+    switch (item.eventType) {
+      case EventType.birthday:
+        icon = Icons.cake;
+        text = StringHelper.formatString(dict.getString("s_birthday"), {"{name}": "${item.name}"});
+        break;
+      case EventType.holiday:
+        icon = Icons.flag;
+        text = "${item.name}";
+        break;
+      case EventType.date:
+        icon = Icons.group;
+        text = "DATE : ${item.name}";
+        break;
+      case EventType.jpcc:
+        icon = Icons.home;
+        text = "JPCC : ${item.name}";
+        break;
+      case EventType.group:
+        icon = Icons.group;
+        text = "${dict.getString("group")} : ${item.name}";
+        break;
+      case EventType.personal:
+        icon = Icons.person;
+        text = "${dict.getString("personal")} : ${item.name}";
+        break;
+    }
+
     return Container(
         width: double.infinity,
-        decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(4.0)),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.0)),
         padding: EdgeInsets.all(16.0),
         margin: EdgeInsets.symmetric(horizontal: 16.0),
-        child: Text("${item.name}"));
+        child: AdvRow(children: [Expanded(child: Material(color: Colors.transparent, child: Text(text))), Icon(icon)]));
   }
 
   List<Widget> _renderWeekDays() {
@@ -671,28 +657,12 @@ class DayCalendarState extends State<DayCalendar>
   }
 
   /// draw a little dot inside the each boxes (only if it's one of the
-  /// [widget.markedDates] and slightly below day text
-  Widget _renderMarked(DateTime now) {
-    if (widget.markedDates != null &&
-        widget.markedDates.length > 0 &&
-        widget.markedDates
-                .where((markedDate) => markedDate.date == now)
-                .toList()
-                .length >
-            0) {
-      return widget.calendarStyle.defaultMarkedDateWidget;
-    } else {
-      bool found = false;
-
-      for (EventItem item in events) {
-        print("item => ${item.name}, ${item.startTime}");
-        if (item.matchDate(now)) {
-          found = true;
-          break;
-        }
+  /// [widget.selectedDateEvents] and slightly below day text
+  Widget _renderMarked(List<EventItem> monthlyEvents, DateTime now) {
+    if (monthlyEvents != null && monthlyEvents.length > 0) {
+      for (EventItem item in monthlyEvents) {
+        if (item.matchDate(now)) return widget.calendarStyle.defaultMarkedDateWidget;
       }
-      print("($now), found => $found, ${widget.calendarStyle.defaultMarkedDateWidget}");
-      if (found) return widget.calendarStyle.defaultMarkedDateWidget;
     }
 
     return Container();
@@ -706,10 +676,8 @@ class DayCalendarState extends State<DayCalendar>
     var fullSize = fullRenderBox.size;
     var fullOffset = Offset.zero;
 
-    Rect fullRect = Rect.fromLTWH(
-        fullOffset.dx, fullOffset.dy, fullSize.width, fullSize.height);
-    Rect boxRect = widget.monthKey.currentState
-        .getBoxRectFromIndex(this._pageDates[1].month - 1);
+    Rect fullRect = Rect.fromLTWH(fullOffset.dx, fullOffset.dy, fullSize.width, fullSize.height);
+    Rect boxRect = widget.monthKey.currentState.getBoxRectFromIndex(this._pageDates[1].month - 1);
 
     rectTween = RectTween(begin: fullRect, end: boxRect);
 
@@ -724,7 +692,18 @@ class DayCalendarState extends State<DayCalendar>
 
     _selectedDateTime = currentDate;
     if (widget.onDayPressed != null) {
-      events = widget.onDayPressed(_selectedDateTime);
+      List<EventItem> newEventItems = [];
+
+      int counter = 0;
+      for (EventItem item in widget.events) {
+        if (item.matchDate(currentDate)) {
+          newEventItems.add(item);
+        }
+        counter++;
+      }
+
+      selectedDateEvents?.clear();
+      selectedDateEvents = newEventItems;
     }
 
     setState(() {
@@ -737,13 +716,10 @@ class DayCalendarState extends State<DayCalendar>
   void _setPage({int page}) async {
     /// for initial set
     if (page == null) {
-      DateTime date0 =
-          DateTime(DateTime.now().year, DateTime.now().month - 1, 1);
+      DateTime date0 = DateTime(DateTime.now().year, DateTime.now().month - 1, 1);
       DateTime date1 = DateTime(DateTime.now().year, DateTime.now().month, 1);
-      DateTime date2 =
-          DateTime(DateTime.now().year, DateTime.now().month + 1, 1);
-      DateTime date3 =
-          DateTime(DateTime.now().year, DateTime.now().month + 2, 1);
+      DateTime date2 = DateTime(DateTime.now().year, DateTime.now().month + 1, 1);
+      DateTime date3 = DateTime(DateTime.now().year, DateTime.now().month + 2, 1);
 
       _startWeekday[0] = date0.weekday;
       _endWeekday[0] = date1.weekday;
@@ -802,25 +778,22 @@ class DayCalendarState extends State<DayCalendar>
           this._startWeekday[page] +
           (7 - this._endWeekday[page]);
 
-      DateTime startDate = DateTime(
-          dates[page].year, dates[page].month, 1 - this._startWeekday[page]);
+      DateTime startDate = DateTime(dates[page].year, dates[page].month, 1 - this._startWeekday[page]);
 
-      DateTime endDate = DateTime(dates[page].year, dates[page].month,
-          totalItemCount - this._startWeekday[page]);
+      DateTime endDate = DateTime(dates[page].year, dates[page].month, totalItemCount - this._startWeekday[page]);
 
       this.setState(() {
         this._pageDates = dates;
         if (!(_selectedDateTime.difference(startDate) >= Duration.zero &&
             _selectedDateTime.difference(endDate) <= Duration.zero)) {
-          events = null;
+          selectedDateEvents = null;
         }
       });
     }
 
     /// set current month and year in the [MonthCalendar] and
     /// [YearCalendar (via MonthCalendar)]
-    widget.monthKey.currentState
-        .setMonth(_pageDates[1].month, _pageDates[1].year);
+    widget.monthKey.currentState.setMonth(_pageDates[1].month, _pageDates[1].year);
     widget.monthKey.currentState.setYear(_pageDates[1].year);
   }
 
@@ -850,6 +823,13 @@ class DayCalendarState extends State<DayCalendar>
       this._pageDates = dates;
     });
   }
+
+  void onFabTapped() {
+    print("Event here!");
+    if (this.mounted) {
+      Routing.push(context, EventDetailPage(selectedDateEvents));
+    }
+  }
 }
 
 class MonthCalendar extends StatefulWidget {
@@ -859,7 +839,7 @@ class MonthCalendar extends StatefulWidget {
   final AnimationController dayMonthAnim;
   final AnimationController monthYearAnim;
   final CalendarStyle calendarStyle;
-  final List<MarkedDate> markedDates;
+  final List<EventItem> events;
   final DateTime selectedDateTime;
   final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
@@ -873,7 +853,7 @@ class MonthCalendar extends StatefulWidget {
     this.dayMonthAnim,
     this.monthYearAnim,
     this.calendarStyle,
-    this.markedDates,
+    this.events,
     this.selectedDateTime,
     this.onDayPressed,
     this.minDateTime,
@@ -884,8 +864,7 @@ class MonthCalendar extends StatefulWidget {
   MonthCalendarState createState() => MonthCalendarState();
 }
 
-class MonthCalendarState extends State<MonthCalendar>
-    with TickerProviderStateMixin {
+class MonthCalendarState extends State<MonthCalendar> with TickerProviderStateMixin {
   /// The first run, this will be shown (0.0 [widget.dayMonthAnim]'s value)
   ///
   /// After the first run, when [widget.dayMonthAnim]'s value is 0.0, this will
@@ -956,8 +935,7 @@ class MonthCalendarState extends State<MonthCalendar>
     /// wait until [DayCalendar] request to be shown
     ///
     /// See [_handleDayTitleTapped]
-    opacityCtrl = AnimationController(
-        duration: Duration(milliseconds: _kAnimationDuration), vsync: this);
+    opacityCtrl = AnimationController(duration: Duration(milliseconds: _kAnimationDuration), vsync: this);
 
     /// Change opacity controller's value equals month year controller's value
     widget.dayMonthAnim.addListener(() {
@@ -969,8 +947,7 @@ class MonthCalendarState extends State<MonthCalendar>
     widget.monthYearAnim.addListener(() {
       opacityCtrl.value = widget.monthYearAnim.value;
 
-      if (widget.monthYearAnim.status == AnimationStatus.completed ||
-          widget.monthYearAnim.status == AnimationStatus.dismissed) {
+      if (widget.monthYearAnim.status == AnimationStatus.completed || widget.monthYearAnim.status == AnimationStatus.dismissed) {
         rectTween = null;
       }
     });
@@ -1008,11 +985,8 @@ class MonthCalendarState extends State<MonthCalendar>
         builder: (BuildContext context, Widget child) {
           if (rectTween == null)
             return AdvVisibility(
-                visibility: opacityCtrl.value == 0.0 && !_firstRun
-                    ? VisibilityFlag.gone
-                    : VisibilityFlag.visible,
-                child:
-                    Opacity(opacity: opacityCtrl.value, child: monthContent));
+                visibility: opacityCtrl.value == 0.0 && !_firstRun ? VisibilityFlag.gone : VisibilityFlag.visible,
+                child: Opacity(opacity: opacityCtrl.value, child: monthContent));
 
           /// rect tween set when one of these two occasions occurs
           /// 1. Month Title tapped so it has to be squeezed inside year boxes
@@ -1026,8 +1000,7 @@ class MonthCalendarState extends State<MonthCalendar>
           final Rect destRect = rectTween.evaluate(opacityCtrl);
 
           /// minus padding for each horizontal and vertical axis
-          final Size destSize = Size(
-              destRect.size.width - (widget.calendarStyle.dayPadding * 2),
+          final Size destSize = Size(destRect.size.width - (widget.calendarStyle.dayPadding * 2),
               destRect.size.height - (widget.calendarStyle.dayPadding * 2));
           final double top = destRect.top + widget.calendarStyle.dayPadding;
           final double left = destRect.left + widget.calendarStyle.dayPadding;
@@ -1035,8 +1008,7 @@ class MonthCalendarState extends State<MonthCalendar>
           double xFactor = destSize.width / rectTween.end.width;
           double yFactor = destSize.height / rectTween.end.height;
 
-          final Matrix4 transform = Matrix4.identity()
-            ..scale(xFactor, yFactor, 1.0);
+          final Matrix4 transform = Matrix4.identity()..scale(xFactor, yFactor, 1.0);
 
           /// For the Width and Height :
           /// keep the initial size, so we can achieve destination scale
@@ -1053,9 +1025,7 @@ class MonthCalendarState extends State<MonthCalendar>
               width: rectTween.end.width,
               height: rectTween.end.height,
               left: left,
-              child: Opacity(
-                  opacity: opacityCtrl.value,
-                  child: Transform(transform: transform, child: monthContent)));
+              child: Opacity(opacity: opacityCtrl.value, child: Transform(transform: transform, child: monthContent)));
         });
   }
 
@@ -1124,11 +1094,9 @@ class MonthCalendarState extends State<MonthCalendar>
       children: List.generate(12, (index) {
         DateTime currentDate = DateTime(year, index + 1, 1);
         int currentDateInt = int.tryParse("$year${index + 1}");
-        bool isToday = DateTime.now().month == currentDate.month &&
-            DateTime.now().year == currentDate.year;
+        bool isToday = DateTime.now().month == currentDate.month && DateTime.now().year == currentDate.year;
 
-        bool isSelectedDay = _selectedDateTime.month == currentDate.month &&
-            _selectedDateTime.year == currentDate.year;
+        bool isSelectedDay = _selectedDateTime.month == currentDate.month && _selectedDateTime.year == currentDate.year;
 
         TextStyle textStyle;
         Color borderColor;
@@ -1156,35 +1124,28 @@ class MonthCalendarState extends State<MonthCalendar>
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 RenderBox renderBox = context.findRenderObject();
                 RenderBox mainRenderBox = widget.mainContext.findRenderObject();
-                var offset = renderBox.localToGlobal(Offset.zero,
-                    ancestor: mainRenderBox);
+                var offset = renderBox.localToGlobal(Offset.zero, ancestor: mainRenderBox);
                 var size = renderBox.size;
-                Rect rect = Rect.fromLTWH(
-                    offset.dx, offset.dy, size.width, size.height);
+                Rect rect = Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height);
                 boxRects[index] = rect;
               });
             }
 
-            int currentDateLong = int.tryParse(
-                "${currentDate.year}${Utils.leadingZeroInt(currentDate.month, 2)}");
+            int currentDateLong = int.tryParse("${currentDate.year}${Utils.leadingZeroInt(currentDate.month, 2)}");
             int minDateLong = int.tryParse(
                 "${widget.minDateTime?.year ?? currentDate.year}${Utils.leadingZeroInt(widget.minDateTime?.month ?? currentDate.month, 2)}");
             int maxDateLong = int.tryParse(
                 "${widget.maxDateTime?.year ?? currentDate.year}${Utils.leadingZeroInt(widget.maxDateTime?.month ?? currentDate.month, 2)}");
 
-            bool availableDate = currentDateLong >= minDateLong &&
-                currentDateLong <= maxDateLong;
+            bool availableDate = currentDateLong >= minDateLong && currentDateLong <= maxDateLong;
 
             return Container(
               margin: EdgeInsets.all(widget.calendarStyle.dayPadding),
               child: IgnorePointer(
                 ignoring: !availableDate,
                 child: FlatButton(
-                  color: availableDate
-                      ? boxColor
-                      : Color.lerp(systemGreyColor, boxColor, 0.8),
-                  onPressed: () =>
-                      _handleMonthBoxTapped(context, index + 1, year),
+                  color: availableDate ? boxColor : Color.lerp(systemGreyColor, boxColor, 0.8),
+                  onPressed: () => _handleMonthBoxTapped(context, index + 1, year),
                   padding: EdgeInsets.all(widget.calendarStyle.dayPadding),
                   shape: (widget.calendarStyle.daysHaveCircularBorder ?? false)
                       ? CircleBorder(
@@ -1198,9 +1159,7 @@ class MonthCalendarState extends State<MonthCalendar>
                       '${PitComponents.monthsArray[currentDate.month - 1]}',
                       style: availableDate
                           ? textStyle
-                          : textStyle.copyWith(
-                              color: Color.lerp(
-                                  systemGreyColor, textStyle.color, 0.5)),
+                          : textStyle.copyWith(color: Color.lerp(systemGreyColor, textStyle.color, 0.5)),
                       maxLines: 1,
                     ),
                   ),
@@ -1218,15 +1177,13 @@ class MonthCalendarState extends State<MonthCalendar>
     if (widget.monthYearAnim.value != 1.0) return;
 
     int yearMod = this._pageDates[1].year % 12;
-    Rect boxRect = widget.yearKey.currentState
-        .getBoxRectFromIndex((yearMod == 0 ? 12 : yearMod) - 1);
+    Rect boxRect = widget.yearKey.currentState.getBoxRectFromIndex((yearMod == 0 ? 12 : yearMod) - 1);
 
     RenderBox fullRenderBox = context.findRenderObject();
     var fullSize = fullRenderBox.size;
     var fullOffset = Offset.zero;
 
-    Rect fullRect = Rect.fromLTWH(
-        fullOffset.dx, fullOffset.dy, fullSize.width, fullSize.height);
+    Rect fullRect = Rect.fromLTWH(fullOffset.dx, fullOffset.dy, fullSize.width, fullSize.height);
 
     rectTween = RectTween(begin: boxRect, end: fullRect);
 
@@ -1237,25 +1194,20 @@ class MonthCalendarState extends State<MonthCalendar>
 
   void _handleMonthBoxTapped(BuildContext context, int month, int year) {
     /// unless the whole content is fully expanded, cannot tap on month
-    if (widget.dayMonthAnim.value != 1.0 ||
-        widget.dayMonthAnim.status != AnimationStatus.completed) return;
-    if (widget.monthYearAnim.value != 1.0 ||
-        widget.monthYearAnim.status != AnimationStatus.completed) return;
+    if (widget.dayMonthAnim.value != 1.0 || widget.dayMonthAnim.status != AnimationStatus.completed) return;
+    if (widget.monthYearAnim.value != 1.0 || widget.monthYearAnim.status != AnimationStatus.completed) return;
 
     DayCalendarState dayState = widget.dayKey.currentState;
 
     RenderBox monthBoxRenderBox = context.findRenderObject();
     Size monthBoxSize = monthBoxRenderBox.size;
-    Offset monthBoxOffset = monthBoxRenderBox.localToGlobal(Offset.zero,
-        ancestor: widget.mainContext.findRenderObject());
-    Rect monthBoxRect = Rect.fromLTWH(monthBoxOffset.dx, monthBoxOffset.dy,
-        monthBoxSize.width, monthBoxSize.height);
+    Offset monthBoxOffset = monthBoxRenderBox.localToGlobal(Offset.zero, ancestor: widget.mainContext.findRenderObject());
+    Rect monthBoxRect = Rect.fromLTWH(monthBoxOffset.dx, monthBoxOffset.dy, monthBoxSize.width, monthBoxSize.height);
 
     RenderBox fullRenderBox = widget.mainContext.findRenderObject();
     var fullSize = fullRenderBox.size;
     var fullOffset = Offset.zero;
-    Rect fullRect = Rect.fromLTWH(
-        fullOffset.dx, fullOffset.dy, fullSize.width, fullSize.height);
+    Rect fullRect = Rect.fromLTWH(fullOffset.dx, fullOffset.dy, fullSize.width, fullSize.height);
 
     dayState.setState(() {
       dayState.setMonth(month, year);
@@ -1304,8 +1256,7 @@ class MonthCalendarState extends State<MonthCalendar>
       });
 
       /// animate to page right away after reset the values
-      _pageCtrl.animateToPage(page,
-          duration: Duration(milliseconds: 1), curve: Threshold(0.0));
+      _pageCtrl.animateToPage(page, duration: Duration(milliseconds: 1), curve: Threshold(0.0));
 
       /// set year on [YearCalendar]
       widget.yearKey.currentState.setYear(_pageDates[1].year);
@@ -1356,7 +1307,7 @@ class YearCalendar extends StatefulWidget {
   final GlobalKey<MonthCalendarState> monthKey;
   final AnimationController monthYearAnim;
   final CalendarStyle calendarStyle;
-  final List<MarkedDate> markedDates;
+  final List<EventItem> events;
   final DateTime selectedDateTime;
   final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
@@ -1368,7 +1319,7 @@ class YearCalendar extends StatefulWidget {
     this.monthKey,
     this.monthYearAnim,
     this.calendarStyle,
-    this.markedDates,
+    this.events,
     this.selectedDateTime,
     this.onDayPressed,
     this.minDateTime,
@@ -1379,8 +1330,7 @@ class YearCalendar extends StatefulWidget {
   YearCalendarState createState() => YearCalendarState();
 }
 
-class YearCalendarState extends State<YearCalendar>
-    with SingleTickerProviderStateMixin {
+class YearCalendarState extends State<YearCalendar> with SingleTickerProviderStateMixin {
   /// The first run, this will be hidden (1.0 [widget.monthYearAnim]'s value)
   ///
   /// When the [MonthCalendar]'s title is tapped [_handleMonthTitleTapped],
@@ -1401,9 +1351,6 @@ class YearCalendarState extends State<YearCalendar>
 
   /// Selected DateTime
   DateTime _selectedDateTime;
-
-  /// Marks whether the date range [SelectionType.range] is selected on both ends
-  bool _selectRangeIsComplete = false;
 
   /// Array for each boxes position and size
   ///
@@ -1450,10 +1397,7 @@ class YearCalendarState extends State<YearCalendar>
     /// hide this and wait until [MonthCalendar] request to be shown
     ///
     /// See [_handleMonthTitleTapped]
-    opacityCtrl = AnimationController(
-        duration: Duration(milliseconds: _kAnimationDuration),
-        vsync: this,
-        value: 1.0);
+    opacityCtrl = AnimationController(duration: Duration(milliseconds: _kAnimationDuration), vsync: this, value: 1.0);
 
     /// Change opacity controller's value equals month year controller's value
     widget.monthYearAnim.addListener(() {
@@ -1578,33 +1522,25 @@ class YearCalendarState extends State<YearCalendar>
             WidgetsBinding.instance.addPostFrameCallback((_) {
               RenderBox renderBox = context.findRenderObject();
               RenderBox mainRenderBox = widget.mainContext.findRenderObject();
-              var offset =
-                  renderBox.localToGlobal(Offset.zero, ancestor: mainRenderBox);
+              var offset = renderBox.localToGlobal(Offset.zero, ancestor: mainRenderBox);
               var size = renderBox.size;
-              Rect rect =
-                  Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height);
+              Rect rect = Rect.fromLTWH(offset.dx, offset.dy, size.width, size.height);
               boxRects[index] = rect;
             });
           }
 
-          bool availableDate = currentDate.year >=
-                  (widget.minDateTime?.year ?? currentDate.year) &&
-              currentDate.year <=
-                  (widget.maxDateTime?.year ?? currentDate.year);
+          bool availableDate = currentDate.year >= (widget.minDateTime?.year ?? currentDate.year) &&
+              currentDate.year <= (widget.maxDateTime?.year ?? currentDate.year);
 
-          TextStyle fixedTextStyle =
-              isToday ? widget.calendarStyle.defaultTodayTextStyle : textStyle;
+          TextStyle fixedTextStyle = isToday ? widget.calendarStyle.defaultTodayTextStyle : textStyle;
 
           return Container(
             margin: EdgeInsets.all(widget.calendarStyle.dayPadding),
             child: IgnorePointer(
               ignoring: !availableDate,
               child: FlatButton(
-                color: availableDate
-                    ? boxColor
-                    : Color.lerp(systemGreyColor, boxColor, 0.8),
-                onPressed: () =>
-                    _handleYearBoxTapped(context, currentDate.year),
+                color: availableDate ? boxColor : Color.lerp(systemGreyColor, boxColor, 0.8),
+                onPressed: () => _handleYearBoxTapped(context, currentDate.year),
                 padding: EdgeInsets.all(widget.calendarStyle.dayPadding),
                 shape: (widget.calendarStyle.daysHaveCircularBorder ?? false)
                     ? CircleBorder(
@@ -1618,9 +1554,7 @@ class YearCalendarState extends State<YearCalendar>
                     "${currentDate.year}",
                     style: availableDate
                         ? fixedTextStyle
-                        : fixedTextStyle.copyWith(
-                            color: Color.lerp(
-                                systemGreyColor, fixedTextStyle.color, 0.5)),
+                        : fixedTextStyle.copyWith(color: Color.lerp(systemGreyColor, fixedTextStyle.color, 0.5)),
                     maxLines: 1,
                   ),
                 ),
@@ -1634,23 +1568,19 @@ class YearCalendarState extends State<YearCalendar>
 
   void _handleYearBoxTapped(BuildContext context, int year) {
     /// unless the whole content is shown, cannot tap on year
-    if (widget.monthYearAnim.value != 0.0 ||
-        widget.monthYearAnim.status != AnimationStatus.dismissed) return;
+    if (widget.monthYearAnim.value != 0.0 || widget.monthYearAnim.status != AnimationStatus.dismissed) return;
 
     MonthCalendarState monthState = widget.monthKey.currentState;
 
     RenderBox yearBoxRenderBox = context.findRenderObject();
     Size yearBoxSize = yearBoxRenderBox.size;
-    Offset yearBoxOffset = yearBoxRenderBox.localToGlobal(Offset.zero,
-        ancestor: widget.mainContext.findRenderObject());
-    Rect yearBoxRect = Rect.fromLTWH(yearBoxOffset.dx, yearBoxOffset.dy,
-        yearBoxSize.width, yearBoxSize.height);
+    Offset yearBoxOffset = yearBoxRenderBox.localToGlobal(Offset.zero, ancestor: widget.mainContext.findRenderObject());
+    Rect yearBoxRect = Rect.fromLTWH(yearBoxOffset.dx, yearBoxOffset.dy, yearBoxSize.width, yearBoxSize.height);
 
     RenderBox fullRenderBox = widget.mainContext.findRenderObject();
     Offset fullOffset = Offset.zero;
     Size fullSize = fullRenderBox.size;
-    Rect fullRect = Rect.fromLTWH(
-        fullOffset.dx, fullOffset.dy, fullSize.width, fullSize.height);
+    Rect fullRect = Rect.fromLTWH(fullOffset.dx, fullOffset.dy, fullSize.width, fullSize.height);
 
     monthState.setState(() {
       monthState.setYear(year);
@@ -1703,8 +1633,7 @@ class YearCalendarState extends State<YearCalendar>
       });
 
       /// animate to page right away after reset the values
-      _pageCtrl.animateToPage(page,
-          duration: Duration(milliseconds: 1), curve: Threshold(0.0));
+      _pageCtrl.animateToPage(page, duration: Duration(milliseconds: 1), curve: Threshold(0.0));
     }
   }
 

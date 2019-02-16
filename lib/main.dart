@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:date_app/application.dart';
 import 'package:date_app/pages/home_container.dart';
 import 'package:date_app/pages/register.dart';
 import 'package:date_app/utilities/assets.dart';
 import 'package:date_app/utilities/global.dart' as global;
+import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -60,7 +63,7 @@ class _DateAppState extends State<DateApp> {
               final String localeString =
                   (prefs.getString(global.locale) ?? "en");
               _locale = Locale(localeString);
-              _widget = DateAppHome();//RegisterPage();
+              _widget = DateAppHome(); //RegisterPage();
             }
 
             return MaterialApp(
@@ -79,7 +82,8 @@ class _DateAppState extends State<DateApp> {
                   primaryColor: global.CompanyColors.primary[500],
                   primaryColorBrightness: Brightness.light,
                   accentColor: global.CompanyColors.accent[500],
-                  accentColorBrightness: Brightness.light),
+                  accentColorBrightness: Brightness.light,
+                  scaffoldBackgroundColor: Colors.white),
               home: _widget,
             );
           default:
@@ -99,7 +103,8 @@ class _DateAppState extends State<DateApp> {
                   primaryColor: global.CompanyColors.primary[500],
                   primaryColorBrightness: Brightness.light,
                   accentColor: global.CompanyColors.accent[500],
-                  accentColorBrightness: Brightness.light),
+                  accentColorBrightness: Brightness.light,
+                  scaffoldBackgroundColor: Colors.white),
               home: Scaffold(body: Center(child: CircularProgressIndicator())),
             );
         }

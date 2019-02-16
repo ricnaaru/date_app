@@ -17,6 +17,35 @@ import 'package:url_launcher/url_launcher.dart';
 
 const double _kImageHeight = 194.0;
 
+const List<String> _kGroupNames = [
+  "Tukang We eL",
+  "Tukang Main Gitar",
+  "Tim Pembawa Makan 1",
+  "Tim Pembawa Makan 2",
+  "Tim Pembawa Makan 3",
+  "Tim Heboh",
+//  "Defiant Pit Bulls",
+//  "Flying Predators",
+//  "Crazy Zombies",
+//  "Haunting Foxes",
+//  "Brutal Giants",
+//  "Potent Phantoms",
+//  "Quick Crabs",
+//  "Exalted Dogs",
+//  "Clever Aces",
+//  "Fearless Hammers",
+//  "Strong Busters",
+//  "Classic Kangaroos",
+//  "Naughty Ninjas",
+//  "Major Peacocks",
+//  "Monstrous Squirrels",
+//  "Golden Rhinos",
+//  "Brute Dingos",
+//  "Red Doves",
+//  "Silver Spiders",
+//  "White Martians",
+];
+
 class HomePage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() => _HomePageState();
@@ -32,7 +61,7 @@ class _HomePageState extends State<HomePage> {
   ];
 
   List<String> imageUrls = [
-    "https://instagram.fcgk18-1.fna.fbcdn.net/vp/756f8f33897d389eae3d333f562a9905/5C59605A/t51.2885-15/e15/s640x640/49933893_391990768038260_5798305749577750227_n.jpg?_nc_ht=instagram.fcgk18-1.fna.fbcdn.net&_nc_cat=108",
+    "https://firebasestorage.googleapis.com/v0/b/dateapp-6ebae.appspot.com/o/vd.jpg?alt=media&token=d9a0cfde-9e67-4a87-9c14-cde841784ab4",
     "https://img.youtube.com/vi/cfNQKvKNNuA/mqdefault.jpg",
     "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80",
     "https://pbs.twimg.com/media/DXasWxyV4AA3sCD.jpg",
@@ -67,6 +96,52 @@ class _HomePageState extends State<HomePage> {
     "Jasmin Faison",
   ];
 
+  _generateGroup() {
+    Random r = Random();
+
+    int totalGroups = 6; //r.nextInt(_kGroupNames.length);
+
+    while (totalGroups == 0) {
+      totalGroups = r.nextInt(20);
+    }
+
+    String registeredGroupIndex = "";
+    for (int i = 0; i < totalGroups; i++) {
+      int totalMembers = r.nextInt(15);
+      int groupIndex = r.nextInt(_kGroupNames.length);
+
+      while (totalMembers == 0) {
+        totalMembers = r.nextInt(15);
+      }
+
+      while (registeredGroupIndex.indexOf("[$groupIndex]") != -1) {
+        groupIndex = r.nextInt(_kGroupNames.length);
+      }
+
+      Group group = Group(name: _kGroupNames[groupIndex], fixedGroup: r.nextBool());
+
+      String registeredIndex = "";
+
+      for (int j = 0; j < totalMembers; j++) {
+        int memberIndex = r.nextInt(18);
+
+        while (registeredIndex.indexOf("[$memberIndex]") != -1) {
+          memberIndex = r.nextInt(18);
+        }
+
+        group.members.add(members[memberIndex]);
+
+        registeredIndex = "[$memberIndex]$registeredIndex";
+      }
+
+      registeredGroupIndex = "[$groupIndex]$registeredGroupIndex";
+
+      groups.add(group);
+    }
+
+    groups.forEach((group) => print("groups => $group"));
+  }
+
   @override
   Widget build(BuildContext context) {
     DateDict dict = DateDict.of(context);
@@ -78,6 +153,14 @@ class _HomePageState extends State<HomePage> {
               margin: EdgeInsets.symmetric(horizontal: 16.0),
               divider: ColumnDivider(16.0),
               children: [
+            FlatButton(
+              child: Text("Generate Group"),
+              onPressed: () {
+                groups.clear();
+                _generateGroup();
+                print("group total => ${groups.length}");
+              },
+            ),
             VotingCard(
                 coverImageUrl: CachedNetworkImage(
                     imageUrl: imageUrls[3], fit: BoxFit.cover),
