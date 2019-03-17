@@ -28,7 +28,7 @@ class _OpenDiscussionPageState extends AdvState<OpenDiscussionPage> {
     super.initStateWithContext(context);
     DateDict dict = DateDict.of(context);
 
-    _checkListItems = members.map((member) => CheckListItem(member.name, icon: member.photo)).toList();
+//    _checkListItems = members.map((member) => CheckListItem(member.name, icon: member.photo)).toList();
 
     categoryController = AdvChooserController(
       label: dict.getString("category"),

@@ -1,12 +1,11 @@
-import 'package:date_app/pages/event.dart';
 import 'package:date_app/pages/event_detail.dart';
 import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/utilities/models.dart';
 import 'package:date_app/utilities/routing.dart';
 import 'package:date_app/utilities/string_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/scheduler.dart';
 
 /// A Calculator.
 import 'package:intl/intl.dart' show DateFormat;
@@ -23,6 +22,8 @@ import 'package:pit_components/utils/utils.dart';
 
 /// A Calculator.
 
+/// A Calculator.
+
 const int _kAnimationDuration = 300;
 
 enum PickType {
@@ -30,6 +31,9 @@ enum PickType {
   month,
   year,
 }
+
+typedef CheckMarkedCallback = bool Function(DateTime date, PickType type, {EventCategory category});
+typedef GetEventCallback = List<Event> Function(DateTime date);
 
 class CalendarStyle {
   final TextStyle defaultHeaderTextStyle = ts.fs20.copyWith(color: PitComponents.datePickerHeaderColor);
@@ -41,16 +45,6 @@ class CalendarStyle {
   final TextStyle daysLabelTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerDaysLabelColor);
   final TextStyle defaultNotesTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerMarkedDaysDaysColor);
   final TextStyle defaultWeekendTextStyle = ts.fs14.copyWith(color: PitComponents.datePickerWeekendColor);
-  final Widget defaultMarkedDateWidget = Align(
-    alignment: Alignment.bottomCenter,
-    child: Container(
-      color: Colors.red,
-      //PitComponents.datePickerMarkedDaysDaysColor,
-      height: 4.0,
-      width: 4.0,
-      margin: EdgeInsets.only(bottom: 4.0),
-    ),
-  );
   final Color todayBorderColor = PitComponents.datePickerTodayColor;
   final Color todayButtonColor = PitComponents.datePickerTodayColor;
   final Color selectedDayButtonColor = PitComponents.datePickerSelectedColor;
@@ -92,7 +86,8 @@ class DailyCalendarCarousel extends StatefulWidget {
   final CalendarStyle calendarStyle;
   final DateTime minDateTime;
   final DateTime maxDateTime;
-  final List<EventItem> events;
+  final CheckMarkedCallback checkMarkedCallback;
+  final GetEventCallback getEventCallback;
 
   DailyCalendarCarousel({
     Key key,
@@ -107,14 +102,14 @@ class DailyCalendarCarousel extends StatefulWidget {
     bool daysHaveCircularBorder,
     this.onDayPressed,
     Color iconColor = Colors.blueAccent,
-    List<EventItem> events = const [],
     EdgeInsets headerMargin = const EdgeInsets.symmetric(vertical: 16.0),
     double childAspectRatio = 1.0,
     EdgeInsets weekDayMargin = const EdgeInsets.only(bottom: 4.0),
     this.minDateTime,
     this.maxDateTime,
-  })  : this.events = events ?? const [],
-        this.calendarStyle = CalendarStyle(
+    this.checkMarkedCallback,
+    this.getEventCallback,
+  })  : this.calendarStyle = CalendarStyle(
           weekDays: weekDays,
           viewportFraction: viewportFraction,
           prevMonthDayBorderColor: prevMonthDayBorderColor,
@@ -167,9 +162,10 @@ class DailyCalendarCarouselState extends State<DailyCalendarCarousel> with Ticke
         calendarStyle: widget.calendarStyle,
         monthYearAnim: _monthYearAnim,
         selectedDateTime: _selectedDateTime,
-        events: widget.events,
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
+        checkMarkedCallback: widget.checkMarkedCallback,
+        getEventCallback: widget.getEventCallback,
       ),
       MonthCalendar(
         mainContext: context,
@@ -181,9 +177,10 @@ class DailyCalendarCarouselState extends State<DailyCalendarCarousel> with Ticke
         monthYearAnim: _monthYearAnim,
         selectedDateTime: _selectedDateTime,
         onDayPressed: widget.onDayPressed,
-        events: widget.events,
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
+        checkMarkedCallback: widget.checkMarkedCallback,
+        getEventCallback: widget.getEventCallback,
       ),
       DayCalendar(
         mainContext: context,
@@ -193,9 +190,10 @@ class DailyCalendarCarouselState extends State<DailyCalendarCarousel> with Ticke
         dayMonthAnim: _dayMonthAnim,
         selectedDateTime: _selectedDateTime,
         onDayPressed: widget.onDayPressed,
-        events: widget.events,
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
+        checkMarkedCallback: widget.checkMarkedCallback,
+        getEventCallback: widget.getEventCallback,
       ),
     ];
 
@@ -212,11 +210,12 @@ class DayCalendar extends StatefulWidget {
   final GlobalKey<MonthCalendarState> monthKey;
   final AnimationController dayMonthAnim;
   final CalendarStyle calendarStyle;
-  final List<EventItem> events;
   final DateTime selectedDateTime;
   final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
   final DateTime maxDateTime;
+  final CheckMarkedCallback checkMarkedCallback;
+  final GetEventCallback getEventCallback;
 
   DayCalendar({
     this.mainContext,
@@ -224,11 +223,12 @@ class DayCalendar extends StatefulWidget {
     this.monthKey,
     this.dayMonthAnim,
     this.calendarStyle,
-    this.events,
     this.selectedDateTime,
     this.onDayPressed,
     this.minDateTime,
     this.maxDateTime,
+    this.checkMarkedCallback,
+    this.getEventCallback,
   }) : super(key: key);
 
   @override
@@ -271,7 +271,7 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
   Tween<Rect> rectTween;
 
   AnimationController _listAnimation;
-  List<EventItem> selectedDateEvents;
+  List<Event> selectedDateEvents;
 
   @override
   initState() {
@@ -438,26 +438,14 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
     DateTime endDate = DateTime(
         this._pageDates[slideIndex].year, this._pageDates[slideIndex].month, totalItemCount - this._startWeekday[slideIndex]);
 
-    List<EventItem> thisMonth = [];
-
-    for (EventItem item in widget.events) {
-      if (item.matchDate(startDate, untilAnotherDate: endDate)) {
-        thisMonth.add(item);
-      }
-    }
-
     if (_selectedDateTime.difference(startDate) >= Duration.zero && _selectedDateTime.difference(endDate) <= Duration.zero) {
       if (selectedDateEvents == null && _selectedDateTime != null && widget.onDayPressed != null) {
-        List<EventItem> newEventItems = [];
+        if (widget.getEventCallback != null) {
+          List<Event> newEvents = widget.getEventCallback(_selectedDateTime);
 
-        for (EventItem item in widget.events) {
-          if (item.matchDate(_selectedDateTime)) {
-            newEventItems.add(item);
-          }
+          selectedDateEvents?.clear();
+          selectedDateEvents = newEvents;
         }
-
-        selectedDateEvents?.clear();
-        selectedDateEvents = newEventItems;
       }
 
       int totalPortion = (selectedDateEvents?.length ?? 1).clamp(1, 5);
@@ -575,7 +563,7 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
                         maxLines: 1,
                       ),
                     ),
-                    _renderMarked(thisMonth, currentDate),
+                Align(alignment: Alignment.bottomCenter, child: _renderMarked(currentDate, isSelected: isSelectedDay, isAvailable: availableDate)),
                   ]),
                 ),
               ),
@@ -585,6 +573,17 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
         Expanded(
           child: Hero(
             tag: "dailyDetail",
+            flightShuttleBuilder: (
+              BuildContext flightContext,
+              Animation<double> animation,
+              HeroFlightDirection flightDirection,
+              BuildContext fromHeroContext,
+              BuildContext toHeroContext,
+            ) {
+              return SingleChildScrollView(
+                child: fromHeroContext.widget,
+              );
+            },
             child: Container(
               width: double.infinity,
               color: Colors.transparent,
@@ -598,32 +597,32 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
     );
   }
 
-  Widget _buildEventCard(DateDict dict, EventItem item) {
+  Widget _buildEventCard(DateDict dict, Event item) {
     IconData icon;
     String text;
 
-    switch (item.eventType) {
-      case EventType.birthday:
+    switch (item.category) {
+      case EventCategory.birthday:
         icon = Icons.cake;
         text = StringHelper.formatString(dict.getString("s_birthday"), {"{name}": "${item.name}"});
         break;
-      case EventType.holiday:
+      case EventCategory.holiday:
         icon = Icons.flag;
-        text = "${item.name}";
+        text = "${dict.getString(item.name)}";
         break;
-      case EventType.date:
+      case EventCategory.date:
         icon = Icons.group;
         text = "DATE : ${item.name}";
         break;
-      case EventType.jpcc:
+      case EventCategory.jpcc:
         icon = Icons.home;
         text = "JPCC : ${item.name}";
         break;
-      case EventType.group:
+      case EventCategory.group:
         icon = Icons.group;
         text = "${dict.getString("group")} : ${item.name}";
         break;
-      case EventType.personal:
+      case EventCategory.personal:
         icon = Icons.person;
         text = "${dict.getString("personal")} : ${item.name}";
         break;
@@ -658,14 +657,29 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
 
   /// draw a little dot inside the each boxes (only if it's one of the
   /// [widget.selectedDateEvents] and slightly below day text
-  Widget _renderMarked(List<EventItem> monthlyEvents, DateTime now) {
-    if (monthlyEvents != null && monthlyEvents.length > 0) {
-      for (EventItem item in monthlyEvents) {
-        if (item.matchDate(now)) return widget.calendarStyle.defaultMarkedDateWidget;
-      }
+  Widget _renderMarked(DateTime now, {bool isSelected, bool isAvailable}) {
+    final Icon defaultHolidayWidget = Icon(Icons.flag, color: isSelected || !isAvailable ? Colors.white : systemPurpleColor, size: 10.0);
+    final Icon defaultBirthdayWidget = Icon(Icons.cake, color: isSelected || !isAvailable ? Colors.white : systemOrangeColor, size: 10.0);
+    final Icon defaultEventWidget = Icon(Icons.event, color: isSelected || !isAvailable ? Colors.white : systemTealColor, size: 10.0);
+
+    List<Widget> children = [];
+
+    if (widget.checkMarkedCallback(now, PickType.day, category: EventCategory.birthday)) {
+      children.add(defaultBirthdayWidget);
     }
 
-    return Container();
+    if (widget.checkMarkedCallback(now, PickType.day, category: EventCategory.holiday)) {
+      children.add(defaultHolidayWidget);
+    }
+
+    if (widget.checkMarkedCallback(now, PickType.day, category: EventCategory.date) ||
+        widget.checkMarkedCallback(now, PickType.day, category: EventCategory.group) ||
+        widget.checkMarkedCallback(now, PickType.day, category: EventCategory.jpcc) ||
+        widget.checkMarkedCallback(now, PickType.day, category: EventCategory.personal)) {
+      children.add(defaultEventWidget);
+    }
+
+    return Row(mainAxisSize: MainAxisSize.min, children: children);
   }
 
   void _handleDayTitleTapped(BuildContext context) {
@@ -691,19 +705,11 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
     if (widget.dayMonthAnim.value != 0.0) return;
 
     _selectedDateTime = currentDate;
-    if (widget.onDayPressed != null) {
-      List<EventItem> newEventItems = [];
-
-      int counter = 0;
-      for (EventItem item in widget.events) {
-        if (item.matchDate(currentDate)) {
-          newEventItems.add(item);
-        }
-        counter++;
-      }
+    if (widget.getEventCallback != null && widget.onDayPressed != null) {
+      List<Event> newEvents = widget.getEventCallback(currentDate);
 
       selectedDateEvents?.clear();
-      selectedDateEvents = newEventItems;
+      selectedDateEvents = newEvents;
     }
 
     setState(() {
@@ -825,7 +831,6 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
   }
 
   void onFabTapped() {
-    print("Event here!");
     if (this.mounted) {
       Routing.push(context, EventDetailPage(selectedDateEvents));
     }
@@ -839,11 +844,12 @@ class MonthCalendar extends StatefulWidget {
   final AnimationController dayMonthAnim;
   final AnimationController monthYearAnim;
   final CalendarStyle calendarStyle;
-  final List<EventItem> events;
   final DateTime selectedDateTime;
   final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
   final DateTime maxDateTime;
+  final CheckMarkedCallback checkMarkedCallback;
+  final GetEventCallback getEventCallback;
 
   MonthCalendar({
     this.mainContext,
@@ -853,11 +859,12 @@ class MonthCalendar extends StatefulWidget {
     this.dayMonthAnim,
     this.monthYearAnim,
     this.calendarStyle,
-    this.events,
     this.selectedDateTime,
     this.onDayPressed,
     this.minDateTime,
     this.maxDateTime,
+    this.checkMarkedCallback,
+    this.getEventCallback,
   }) : super(key: key);
 
   @override
@@ -1281,9 +1288,9 @@ class MonthCalendarState extends State<MonthCalendar> with TickerProviderStateMi
   void setYear(int year) {
     List<DateTime> dates = List(3);
     int month = _pageDates[1].month;
-    dates[0] = DateTime(year, month - 1, 1);
+    dates[0] = DateTime(year - 1, month, 1);
     dates[1] = DateTime(year, month, 1);
-    dates[2] = DateTime(year, month + 1, 1);
+    dates[2] = DateTime(year + 1, month, 1);
 
     this.setState(() {
       this._pageDates = dates;
@@ -1307,11 +1314,12 @@ class YearCalendar extends StatefulWidget {
   final GlobalKey<MonthCalendarState> monthKey;
   final AnimationController monthYearAnim;
   final CalendarStyle calendarStyle;
-  final List<EventItem> events;
   final DateTime selectedDateTime;
   final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
   final DateTime maxDateTime;
+  final CheckMarkedCallback checkMarkedCallback;
+  final GetEventCallback getEventCallback;
 
   YearCalendar({
     this.mainContext,
@@ -1319,11 +1327,12 @@ class YearCalendar extends StatefulWidget {
     this.monthKey,
     this.monthYearAnim,
     this.calendarStyle,
-    this.events,
     this.selectedDateTime,
     this.onDayPressed,
     this.minDateTime,
     this.maxDateTime,
+    this.checkMarkedCallback,
+    this.getEventCallback,
   }) : super(key: key);
 
   @override

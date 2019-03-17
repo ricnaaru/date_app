@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:date_app/components/roundrect_checkbox.dart';
 import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/utilities/models.dart';
 import 'package:date_app/utilities/textstyles.dart';
 import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_button.dart';
@@ -26,7 +27,7 @@ class _AddEventPositionSettingPageState extends State<AddEventPositionSettingPag
     DateDict dict = DateDict.of(context);
     return Scaffold(
         appBar: AppBar(
-          title: Text(dict.getString("position_setting")),
+          title: Text(dict.getString("position_qualification_setting")),
           elevation: 0.0,
           backgroundColor: Colors.white,
         ),
@@ -41,7 +42,11 @@ class _AddEventPositionSettingPageState extends State<AddEventPositionSettingPag
                           margin: EdgeInsets.symmetric(horizontal: 16.0),
                         ),
                         children: widget.positions.map((position) {
-                          return MemberItem(position, widget.participants);
+                          if (widget.participants.first is Member) {
+                            return MemberItem(position, widget.participants);
+                          } else {
+                            return GroupItem(position, widget.participants);
+                          }
                         }).toList()))),
             Container(
                 margin: EdgeInsets.all(18.0),
@@ -155,5 +160,109 @@ class _MemberItemState extends State<MemberItem> with TickerProviderStateMixin {
                         ]));
                   }).toList()),
             )));
+  }
+}
+
+class GroupItem extends StatefulWidget {
+  final String position;
+  final List<Group> groups;
+
+  GroupItem(this.position, this.groups);
+
+  @override
+  State<StatefulWidget> createState() => _GroupItemState();
+}
+
+class _GroupItemState extends State<GroupItem> with TickerProviderStateMixin {
+  AnimationController anim;
+  List<Group> checkedGroups = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    anim = AnimationController(vsync: this, duration: kTabScrollDuration);
+  }
+
+//  AnimatedIcon(
+//  icon: AnimatedIcons.menu_close,
+//  color: Colors.white,
+//  progress: _animateIcon,
+//  )
+  @override
+  Widget build(BuildContext context) {
+    DateDict dict = DateDict.of(context);
+    String description;
+
+    if (checkedGroups.length == widget.groups.length) {
+      description = dict.getString("all_participants");
+    } else if (checkedGroups.length == 1) {
+      description = "1 ${dict.getString("participant")}";
+    } else {
+      description = "${checkedGroups.length} ${dict.getString("participants")}";
+    }
+
+    return AdvColumn(
+        children: [
+          AnimatedBuilder(
+              animation: anim,
+              builder: (BuildContext context, Widget child) {
+                return InkWell(
+                    onTap: () {
+                      if (anim.value == 0.0) {
+                        anim.forward();
+                      } else {
+                        anim.reverse();
+                      }
+                    },
+                    child: AdvRow(
+                        padding: EdgeInsets.symmetric(horizontal: 16.0).copyWith(top: 8.0, bottom: 8.0 - (anim.value * 4.0)),
+                        children: [
+                          Expanded(
+                              child: AdvColumn(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                Text(widget.position, style: h7),
+                                Text(description, style: p3),
+                              ])),
+                          AnimatedBuilder(
+                            animation: anim,
+                            child: Icon(Icons.keyboard_arrow_right),
+                            builder: (BuildContext context, Widget child) {
+                              return Transform.rotate(
+                                angle: anim.value * 0.5 * pi,
+                                child: child,
+                              );
+                            },
+                          )
+                        ]));
+              })
+        ]..add(SizeTransition(
+          sizeFactor: anim,
+          child: AdvColumn(
+              divider: Container(height: 0.5, color: Colors.black38),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              margin: EdgeInsets.only(left: 24.0, bottom: 8.0, right: 24.0),
+              children: widget.groups.map((group) {
+                return InkWell(
+                    onTap: () {
+                      setState(() {
+                        if (checkedGroups.indexOf(group) == -1) {
+                          checkedGroups.add(group);
+                        } else {
+                          checkedGroups.remove(group);
+                        }
+                      });
+                    },
+                    child: AdvRow(margin: EdgeInsets.all(8.0), children: [
+                      Expanded(child: Text(group.name)),
+                      AbsorbPointer(
+                          child: RoundRectCheckbox(
+                            activeColor: systemPrimaryColor,
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            value: checkedGroups.indexOf(group) != -1,
+                            onChanged: (value) {},
+                          ))
+                    ]));
+              }).toList()),
+        )));
   }
 }

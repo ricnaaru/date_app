@@ -1,25 +1,17 @@
-import 'package:date_app/components/adv_dialog.dart';
-import 'package:date_app/components/adv_dialog_input.dart';
 import 'package:date_app/components/adv_floating_button.dart';
 import 'package:date_app/pages/add_event.dart';
 import 'package:date_app/pages/event.dart';
 import 'package:date_app/pages/open_discussion.dart';
-import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/utilities/models.dart';
 import 'package:date_app/utilities/routing.dart';
 import 'package:date_app/utilities/string_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:pit_components/components/adv_chooser.dart';
 import 'package:pit_components/components/adv_column.dart';
-import 'package:date_app/utilities/textstyles.dart' as ts;
-import 'package:pit_components/components/adv_group_check.dart';
 import 'package:pit_components/components/adv_row.dart';
-import 'package:pit_components/components/adv_text_field.dart';
-import 'package:pit_components/components/controllers/adv_chooser_controller.dart';
-import 'package:pit_components/utils/utils.dart';
 
 class EventDetailPage extends StatefulWidget {
-  final List<EventItem> eventItems;
+  final List<Event> eventItems;
 
   EventDetailPage(this.eventItems);
 
@@ -69,33 +61,33 @@ class _EventDetailPageState extends State<EventDetailPage>
     );
   }
 
-  Widget _buildEventCard(DateDict dict, EventItem item) {
+  Widget _buildEventCard(DateDict dict, Event item) {
     IconData icon;
     String text;
 
-    switch (item.eventType) {
-      case EventType.birthday:
+    switch (item.category) {
+      case EventCategory.birthday:
         icon = Icons.cake;
         text = StringHelper.formatString(
             dict.getString("s_birthday"), {"{name}": "${item.name}"});
         break;
-      case EventType.holiday:
+      case EventCategory.holiday:
         icon = Icons.flag;
-        text = "${item.name}";
+        text = "${dict.getString(item.name)}";
         break;
-      case EventType.date:
+      case EventCategory.date:
         icon = Icons.group;
         text = "DATE : ${item.name}";
         break;
-      case EventType.jpcc:
+      case EventCategory.jpcc:
         icon = Icons.home;
         text = "JPCC : ${item.name}";
         break;
-      case EventType.group:
+      case EventCategory.group:
         icon = Icons.group;
         text = "${dict.getString("group")} : ${item.name}";
         break;
-      case EventType.personal:
+      case EventCategory.personal:
         icon = Icons.person;
         text = "${dict.getString("personal")} : ${item.name}";
         break;

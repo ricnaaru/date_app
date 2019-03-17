@@ -1,30 +1,110 @@
-import 'dart:math';
-
 import 'package:date_app/application.dart';
 import 'package:date_app/pages/home_container.dart';
-import 'package:date_app/pages/register.dart';
 import 'package:date_app/utilities/assets.dart';
 import 'package:date_app/utilities/global.dart' as global;
-import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/utilities/notification_helper.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:pit_components/components/adv_future_builder.dart';
 import 'package:pit_components/pit_components.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+//import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-void main() => runApp(DateApp());
+void main() => runApp(new NemobApp());
 
-class DateApp extends StatefulWidget {
+class NemobApp extends StatefulWidget {
   @override
-  _DateAppState createState() => new _DateAppState();
+  _NemobAppState createState() => new _NemobAppState();
 }
 
-class _DateAppState extends State<DateApp> {
+class _NemobAppState extends State<NemobApp> {
   Locale _locale = Locale("en");
   Widget _widget = Container();
   SharedPreferences prefs;
+  bool changingLanguage = false;
 
-  getPrefs() async {
+  @override
+  void initState() {
+    super.initState();
+    application.onLocaleChanged = onLocaleChange;
+
+    NotificationHelper.init(
+      onMessage: (Map<String, dynamic> message) async {
+        print("onMessage fired! => $message");
+        var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+            'your channel id', 'your channel name', 'your channel description',
+            importance: Importance.Max, priority: Priority.High);
+        var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+        var platformChannelSpecifics = new NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+        await FlutterLocalNotificationsPlugin()
+            .show(0, 'plain title', 'plain body', platformChannelSpecifics, payload: 'item id 2');
+      },
+      onLaunch: (Map<String, dynamic> message) {
+        print("onLaunch fired! => $message");
+      },
+      onResume: (Map<String, dynamic> message) {
+        print("onResume fired! => $message");
+      },
+      onTokenRefresh: (String token) {
+        print("onTokenRefresh fired! => $token");
+      },
+    );
+
+//    NotificationHelper.getToken();
+//    NotificationHelper.getToken();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (changingLanguage) {
+      setState(() {
+        changingLanguage = false;
+      });
+    }
+
+    return AdvFutureBuilder(
+      futureExecutor: getPrefs,
+      widgetBuilder: (BuildContext context) {
+        if (prefs != null) {
+          final String localeString = (prefs.getString(global.locale) ?? "id");
+          _locale = Locale(localeString);
+          _widget = DateAppHome();
+
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            localizationsDelegates: [
+              DateLocalizationsDelegate(overriddenLocale: _locale),
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+            ],
+            supportedLocales: [
+              const Locale('en', 'US'), // English
+              const Locale('id', 'ID'), // Hebrew
+            ],
+            theme: new ThemeData(
+                brightness: Brightness.light,
+                primarySwatch: global.CompanyColors.primary,
+                primaryColor: global.CompanyColors.primary[500],
+                primaryColorBrightness: Brightness.light,
+                accentColor: global.CompanyColors.accent[500],
+                accentColorBrightness: Brightness.light,
+                scaffoldBackgroundColor: Colors.white),
+            home: _widget,
+          );
+        } else {
+          return MaterialApp(
+            home: Scaffold(body: Center(child: CircularProgressIndicator())),
+          );
+        }
+      },
+    );
+  }
+
+  Future<bool> getPrefs(BuildContext context) async {
     prefs ??= await SharedPreferences.getInstance();
     PitComponents.buttonBackgroundColor = global.CompanyColors.primary[500];
     PitComponents.buttonTextColor = Colors.white;
@@ -41,75 +121,7 @@ class _DateAppState extends State<DateApp> {
     PitComponents.groupCheckCheckColor = global.systemPrimaryColor;
     PitComponents.radioButtonColor = global.systemPrimaryColor;
     PitComponents.loadingAssetName = Assets.hLoading;
-
-    return prefs;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    application.onLocaleChanged = onLocaleChange;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: getPrefs(),
-      builder: (BuildContext context, AsyncSnapshot snapshot) {
-        switch (snapshot.connectionState) {
-          case ConnectionState.done:
-            if (snapshot.hasData) {
-              prefs = snapshot.data;
-              final String localeString =
-                  (prefs.getString(global.locale) ?? "en");
-              _locale = Locale(localeString);
-              _widget = DateAppHome(); //RegisterPage();
-            }
-
-            return MaterialApp(
-              localizationsDelegates: [
-                DateLocalizationsDelegate(overriddenLocale: _locale),
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-              ],
-              supportedLocales: [
-                const Locale('en', 'US'), // English
-                const Locale('id', 'ID'), // Hebrew
-              ],
-              theme: new ThemeData(
-                  brightness: Brightness.light,
-                  primarySwatch: global.CompanyColors.primary,
-                  primaryColor: global.CompanyColors.primary[500],
-                  primaryColorBrightness: Brightness.light,
-                  accentColor: global.CompanyColors.accent[500],
-                  accentColorBrightness: Brightness.light,
-                  scaffoldBackgroundColor: Colors.white),
-              home: _widget,
-            );
-          default:
-            return MaterialApp(
-              localizationsDelegates: [
-                DateLocalizationsDelegate(overriddenLocale: _locale),
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-              ],
-              supportedLocales: [
-                const Locale('en', 'US'), // English
-                const Locale('id', 'ID'), // Hebrew
-              ],
-              theme: new ThemeData(
-                  brightness: Brightness.light,
-                  primarySwatch: global.CompanyColors.primary,
-                  primaryColor: global.CompanyColors.primary[500],
-                  primaryColorBrightness: Brightness.light,
-                  accentColor: global.CompanyColors.accent[500],
-                  accentColorBrightness: Brightness.light,
-                  scaffoldBackgroundColor: Colors.white),
-              home: Scaffold(body: Center(child: CircularProgressIndicator())),
-            );
-        }
-      },
-    );
+    return true;
   }
 
   void onLocaleChange(Locale locale) {

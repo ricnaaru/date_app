@@ -1,0 +1,1 @@
+const double kCardImageHeight = 194.0;

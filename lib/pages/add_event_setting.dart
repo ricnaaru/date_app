@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:date_app/components/adv_chooser_dialog.dart';
 import 'package:date_app/pages/add_event_position_setting.dart';
 import 'package:date_app/pages/open_discussion.dart';
+import 'package:date_app/utilities/backend.dart';
 import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
 import 'package:date_app/utilities/routing.dart';
@@ -26,9 +27,23 @@ import 'package:pit_components/mods/mod_checkbox.dart';
 import 'package:pit_components/pit_components.dart';
 
 class AddEventSettingPage extends StatefulWidget {
+  final String name;
+  final String description;
+  final String location;
+  final String startTime;
+  final String endTime;
+  final String type;
   final List<dynamic> participants;
 
-  AddEventSettingPage(this.participants);
+  AddEventSettingPage(
+    this.participants, {
+    this.name,
+    this.description,
+    this.location,
+    this.startTime,
+    this.endTime,
+    this.type,
+  });
 
   @override
   State<StatefulWidget> createState() => _AddEventSettingPageState();
@@ -40,11 +55,12 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
   bool _reorderMode = false;
   bool ascOrder = false;
   AdvIncrementController daysController;
-  AdvChooserController intervalController;
+  AdvChooserController periodController;
   List<AdvTextFieldController> positionControllers;
   List<AdvIncrementController> totalPositionControllers;
   AdvRadioGroupController methodController;
-  AdvDatePickerController untilDateController;
+  AdvDatePickerController startDateController;
+  AdvDatePickerController endDateController;
   AdvChooserController availabilityController;
   TextStyle labelStyle = PitComponents.getLabelTextStyle();
 
@@ -52,17 +68,17 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
   void initStateWithContext(BuildContext context) {
     super.initStateWithContext(context);
     DateDict dict = DateDict.of(context);
-    Map<String, String> intervalTypes = dict.getMap("interval_type");
+    Map<String, String> eventPeriods = dict.getMap("event_period");
     Map<String, String> checkAvailabilityPeriods = dict.getMap("check_availability");
 
     String asOrdered = dict.getString("as_ordered");
     String shuffle = dict.getString("shuffle");
     DateTime nextMonth = DateTime.now().add(Duration(days: 30));
 
-    intervalController = AdvChooserController(
-      label: dict.getString("interval_type"),
+    periodController = AdvChooserController(
+      label: dict.getString("event_period"),
       text: "once",
-      items: intervalTypes.keys.map((key) => GroupCheckItem(key, intervalTypes[key])).toList(),
+      items: eventPeriods.keys.map((key) => GroupCheckItem(key, eventPeriods[key])).toList(),
     );
     daysController = AdvIncrementController(
       label: dict.getString("days_interval"),
@@ -93,8 +109,12 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
             children: [Icon(Icons.shuffle, color: Colors.black54), Text(shuffle, style: TextStyle(color: Colors.black54))]),
       ),
     ]);
-    untilDateController =
-        AdvDatePickerController(label: dict.getString("until_date"), initialValue: nextMonth, dates: [nextMonth]);
+
+    startDateController = AdvDatePickerController(
+        label: dict.getString("start_date"), initialValue: DateTime.now(), dates: [DateTime.now(), nextMonth]);
+
+    endDateController =
+        AdvDatePickerController(label: dict.getString("end_date"), initialValue: nextMonth, dates: [DateTime.now(), nextMonth]);
 
     availabilityController = AdvChooserController(
         label: dict.getString("check_availability"),
@@ -153,12 +173,12 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
                 divider: ColumnDivider(16.0),
                 children: [
                   AdvChooserDialog(
-                    controller: intervalController,
+                    controller: periodController,
                     itemChangeListener: (context, oldValue, newValue) {
                       setState(() {});
                     },
                   ),
-                  (intervalController.text == "custom") ? AdvIncrement(controller: daysController) : null,
+                  (periodController.text == "custom") ? AdvIncrement(controller: daysController) : null,
                   AdvColumn(divider: ColumnDivider(2.0), children: [
                     AdvRow(mainAxisAlignment: MainAxisAlignment.end, divider: RowDivider(8.0), children: [
                       Expanded(
@@ -203,14 +223,40 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
                     )),
                     AdvRadioGroup(divider: 16.0, controller: methodController),
                   ]),
-                  AdvDatePicker(
-                    controller: untilDateController,
-                    onChanged: (dates) {
-                      if (dates != null)
-                        setState(() {
-                          untilDateController.initialValue = dates.first;
-                        });
-                    },
+                  AdvRow(
+                    divider: RowDivider(8.0),
+                    children: <Widget>[
+                      Expanded(
+                        child: AdvDatePicker(
+                          selectionType: SelectionType.range,
+                          controller: startDateController,
+                          onChanged: (dates) {
+                            if (dates != null)
+                              setState(() {
+                                startDateController.initialValue = dates.first;
+                                endDateController.initialValue = dates.last;
+                                startDateController.dates = dates;
+                                endDateController.dates = dates;
+                              });
+                          },
+                        ),
+                      ),
+                      Expanded(
+                        child: AdvDatePicker(
+                          selectionType: SelectionType.range,
+                          controller: endDateController,
+                          onChanged: (dates) {
+                            if (dates != null)
+                              setState(() {
+                                startDateController.initialValue = dates.first;
+                                endDateController.initialValue = dates.last;
+                                startDateController.dates = dates;
+                                endDateController.dates = dates;
+                              });
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                   AdvChooserDialog(
                     controller: availabilityController,
@@ -225,6 +271,30 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
               child: AdvButton(
                 dict.getString("generate"),
                 width: double.infinity,
+                onPressed: () {
+                  List<DateTime> dates = Backend.getDates(
+                    eventPeriod: periodController.text,
+                    customDaysInterval: daysController.counter,
+                    startDate: startDateController.initialValue,
+                    endDate: endDateController.initialValue,
+                  );
+                  print("dates[${dates.length}] => $dates");
+//                  Backend.generateSchedule(
+//                    name: widget.name,
+//                    description: widget.description,
+//                    location: widget.location,
+//                    startTime: widget.startTime,
+//                    endTime: widget.endTime,
+//                    type: widget.type,
+//                    eventPeriod: periodController.text,
+//                    customDaysInterval: daysController.counter,
+////                    positions: positionControllers,
+//                    shuffle: methodController.checkedValue == "shuffle",
+////                    List<Availability> availabilities,
+//                    startDate: startDateController.initialValue,
+//                    endDate: endDateController.initialValue,
+//                  );
+                },
               ))
         ]),
       ),

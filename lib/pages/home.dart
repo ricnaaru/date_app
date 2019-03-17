@@ -1,17 +1,18 @@
-import 'dart:async';
 import 'dart:math';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:date_app/components/adv_countdown.dart';
-import 'package:date_app/components/adv_dialog.dart';
-import 'package:date_app/pages/voting_card.dart';
+import 'package:date_app/cards/post_card.dart';
+import 'package:date_app/cards/reminder_card.dart';
+import 'package:date_app/cards/voting_card.dart';
+import 'package:date_app/utilities/backend.dart';
+import 'package:date_app/utilities/firebase_database_engine.dart';
 import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
-import 'package:date_app/utilities/string_helper.dart';
-import 'package:date_app/utilities/textstyles.dart' as ts;
+import 'package:date_app/utilities/notification_helper.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:pit_components/components/adv_column.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -96,55 +97,69 @@ class _HomePageState extends State<HomePage> {
     "Jasmin Faison",
   ];
 
-  _generateGroup() {
-    Random r = Random();
-
-    int totalGroups = 6; //r.nextInt(_kGroupNames.length);
-
-    while (totalGroups == 0) {
-      totalGroups = r.nextInt(20);
-    }
-
-    String registeredGroupIndex = "";
-    for (int i = 0; i < totalGroups; i++) {
-      int totalMembers = r.nextInt(15);
-      int groupIndex = r.nextInt(_kGroupNames.length);
-
-      while (totalMembers == 0) {
-        totalMembers = r.nextInt(15);
-      }
-
-      while (registeredGroupIndex.indexOf("[$groupIndex]") != -1) {
-        groupIndex = r.nextInt(_kGroupNames.length);
-      }
-
-      Group group = Group(name: _kGroupNames[groupIndex], fixedGroup: r.nextBool());
-
-      String registeredIndex = "";
-
-      for (int j = 0; j < totalMembers; j++) {
-        int memberIndex = r.nextInt(18);
-
-        while (registeredIndex.indexOf("[$memberIndex]") != -1) {
-          memberIndex = r.nextInt(18);
-        }
-
-        group.members.add(members[memberIndex]);
-
-        registeredIndex = "[$memberIndex]$registeredIndex";
-      }
-
-      registeredGroupIndex = "[$groupIndex]$registeredGroupIndex";
-
-      groups.add(group);
-    }
-
-    groups.forEach((group) => print("groups => $group"));
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     DateDict dict = DateDict.of(context);
+
+    NotificationHelper.init(aaa: (int id, String title, String body, String payload) async {
+      print("saya di luar");
+      // display a dialog with the notification details, tap ok to go to another page
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => new CupertinoAlertDialog(
+          title: new Text(title),
+          content: new Text(body),
+          actions: [
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              child: new Text('Ok'),
+              onPressed: () async {
+//              Navigator.of(context, rootNavigator: true).pop();
+//              await Navigator.push(
+//                context,
+//                new MaterialPageRoute(
+//                  builder: (context) => new SecondScreen(payload),
+//                ),
+//              );
+              },
+            )
+          ],
+        ),
+      );
+
+//      var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+//          'your channel id', 'your channel name', 'your channel description',
+//          importance: Importance.Max, priority: Priority.High);
+//      var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+//      var platformChannelSpecifics = new NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+//      await FlutterLocalNotificationsPlugin()
+//              .show(0, '1 plain title', ' 1 plain body', platformChannelSpecifics, payload: '2 item id 2');
+    },
+      onMessage: (Map<String, dynamic> message) async {
+        print("onMessage fired! => $message");
+        var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+            'your channel id', 'your channel name', 'your channel description',
+            importance: Importance.Max, priority: Priority.High);
+        var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+        var platformChannelSpecifics = new NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+        await FlutterLocalNotificationsPlugin()
+            .show(0, 'plain title', 'plain body', platformChannelSpecifics, payload: 'item id 2');
+      },
+      onLaunch: (Map<String, dynamic> message) {
+        print("onLaunch fired! => $message");
+      },
+      onResume: (Map<String, dynamic> message) {
+        print("onResume fired! => $message");
+      },
+      onTokenRefresh: (String token) {
+        print("onTokenRefresh fired! => $token");
+      },);
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -155,30 +170,31 @@ class _HomePageState extends State<HomePage> {
               children: [
             FlatButton(
               child: Text("Generate Group"),
-              onPressed: () {
-                groups.clear();
-                _generateGroup();
-                print("group total => ${groups.length}");
+              onPressed: () async {
+//                print("group total 1 => ${groups.length}");
+//                var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+//                    'your channel id', 'your channel name', 'your channel description',
+//                    importance: Importance.Max, priority: Priority.High);
+//                var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+//                var platformChannelSpecifics = new NotificationDetails(
+//                    androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+//                await FlutterLocalNotificationsPlugin().show(
+//                    0, 'plain title', 'plain body', platformChannelSpecifics,
+//                    payload: 'item id 2');
+//                print("group total 2 => ${groups.length}");
+
+//                groups.clear();
+//                _generateGroup();
+//                print("group total => ${groups.length}");
               },
             ),
             VotingCard(
-                coverImageUrl: CachedNetworkImage(
-                    imageUrl: imageUrls[3], fit: BoxFit.cover),
+                coverImageUrl: CachedNetworkImage(imageUrl: imageUrls[3], fit: BoxFit.cover),
                 voteItems: [
+                  VotingItem(subject: "Apakah konten renungan Read to Hear membantu anda?", options: ["Ya", "Tidak"]),
                   VotingItem(
-                      subject:
-                          "Apakah konten renungan Read to Hear membantu anda?",
-                      options: ["Ya", "Tidak"]),
-                  VotingItem(
-                    subject:
-                        "Dari sumber manakah anda membaca atau mendengarkan firman Tuhan?",
-                    options: [
-                      "Alkitab buku",
-                      "Aplikasi Alkitab",
-                      "Youtube",
-                      "Langganan majalah",
-                      "Komsel"
-                    ],
+                    subject: "Dari sumber manakah anda membaca atau mendengarkan firman Tuhan?",
+                    options: ["Alkitab buku", "Aplikasi Alkitab", "Youtube", "Langganan majalah", "Komsel"],
                     includeOther: true,
                   ),
                 ],
@@ -198,27 +214,31 @@ class _HomePageState extends State<HomePage> {
 
                   return f;
                 }),
-            _buildPostCard(imageUrls[0], "Vision Day", "29 Jan 2019",
-                contents[0], "See on Instagram", actionCallback: () {
-              launch(links[0]);
-            }),
-            _buildPostCard(
-                imageUrls[1],
-                "JPCC Worship - 盼望 / HOPE (Official Full Album Audio)",
-                "25 Jan 2019",
-                contents[1],
-                "Watch on Youtube", actionCallback: () {
-              launch(links[1]);
-            }),
+            PostCard(
+                imageUrl: imageUrls[0],
+                title: "Vision Day",
+                subtitle: "29 Jan 2019",
+                content: contents[0],
+                actionName: "See on Instagram",
+                actionCallback: () {
+                  launch(links[0]);
+                }),
+            PostCard(
+                imageUrl: imageUrls[1],
+                title: "JPCC Worship - 盼望 / HOPE (Official Full Album Audio)",
+                subtitle: "25 Jan 2019",
+                content: contents[1],
+                actionName: "Watch on Youtube",
+                actionCallback: () {
+                  launch(links[1]);
+                }),
             VotingCard(
-                coverImageUrl: CachedNetworkImage(
-                    imageUrl: imageUrls[2], fit: BoxFit.cover),
+                coverImageUrl: CachedNetworkImage(imageUrl: imageUrls[2], fit: BoxFit.cover),
                 voteItems: List.generate(
                     4,
                     (index) => VotingItem(
                         subject: "$index => ${names[Random().nextInt(19)]}",
-                        options: List.generate(
-                            Random().nextInt(20), (index) => names[index]))),
+                        options: List.generate(Random().nextInt(20), (index) => names[index]))),
                 title: "DATE Cempaka Putih 1 Outing",
                 subtitle: contents[2],
                 callback: (int page, String value) async {
@@ -234,156 +254,13 @@ class _HomePageState extends State<HomePage> {
                             : "Somehow you're not qualified to do this, yet!");
                   return f;
                 }),
-            _buildReminderCard(
-                context,
-                imageUrls[4],
-                "Men Hangout (TransformMe)",
-                DateTime(2019, 2, 3, 15, 57),
-                "Wayang Bistro, The Kasablanka Lt. 3",
-                contents[4]),
+            ReminderCard(
+                imageUrl: imageUrls[4],
+                title: "Men Hangout (TransformMe)",
+                date: DateTime(2019, 2, 3, 15, 57),
+                venue: "Wayang Bistro, The Kasablanka Lt. 3",
+                content: contents[4]),
           ])),
-    );
-  }
-
-  Card _buildPostCard(String imageUrl, String title, String subtitle,
-      String content, String actionName,
-      {VoidCallback actionCallback}) {
-    return Card(
-        child: AdvColumn(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(4.0), topRight: Radius.circular(4.0)),
-          child: SizedBox(
-            height: _kImageHeight,
-            width: double.infinity,
-            child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover),
-          ),
-        ),
-        AdvColumn(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            divider: ColumnDivider(16.0),
-            margin: EdgeInsets.all(8.0),
-            children: [
-              AdvColumn(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  divider: ColumnDivider(4.0),
-                  margin:
-                      EdgeInsets.symmetric(horizontal: 8.0).copyWith(top: 8.0),
-                  children: [
-                    Text(title, style: ts.h5),
-                    Text(subtitle, style: ts.p4),
-                  ]),
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 8.0),
-                child: handleEmoji(content),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: InkWell(
-                  child: Container(
-                    child: Text(
-                      actionName,
-                      style: ts.h9.copyWith(color: Colors.blueAccent),
-                    ),
-                    padding: EdgeInsets.all(8.0),
-                  ),
-                  onTap: () {
-                    if (actionCallback != null) actionCallback();
-                  },
-                ),
-              ),
-            ]),
-      ], //0.725 | 0.75
-    ));
-  }
-
-  Card _buildReminderCard(BuildContext context, String imageUrl, String title,
-      DateTime date, String venue, String content) {
-    DateDict dict = DateDict.of(context);
-    DateFormat df = dict.getDateFormat("dd MMM yyyy HH:mm");
-
-    return Card(
-        child: AdvColumn(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(4.0), topRight: Radius.circular(4.0)),
-          child: SizedBox(
-            height: _kImageHeight,
-            width: double.infinity,
-            child: CachedNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover),
-          ),
-        ),
-        AdvColumn(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            divider: ColumnDivider(16.0),
-            margin: EdgeInsets.all(8.0),
-            children: [
-              AdvColumn(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  divider: ColumnDivider(4.0),
-                  margin:
-                      EdgeInsets.symmetric(horizontal: 8.0).copyWith(top: 8.0),
-                  children: [
-                    Text(title, style: ts.h5),
-                    Text("${df.format(date)} WIB\n$venue", style: ts.p4),
-                  ]),
-              Container(
-                margin: EdgeInsets.symmetric(horizontal: 8.0),
-                child: handleEmoji(content),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: InkWell(
-                  child: Container(
-                    child: Text(
-                      dict.getString("remind_me"),
-                      style: ts.h9.copyWith(color: Colors.blueAccent),
-                    ),
-                    padding: EdgeInsets.all(8.0),
-                  ),
-                  onTap: () {
-                    showDialog(
-                        context: context,
-                        builder: (BuildContext context) => AlarmDialog(date));
-                  },
-                ),
-              ),
-            ]),
-      ], //0.725 | 0.75
-    ));
-  }
-}
-
-class AlarmDialog extends StatelessWidget {
-  final DateTime alarmDate;
-
-  AlarmDialog(this.alarmDate);
-
-  @override
-  Widget build(BuildContext context) {
-    DateDict dict = DateDict.of(context);
-    DateFormat df = dict.getDateFormat("dd MMM yyyy HH:mm");
-
-    return AdvDialog(
-      title: dict.getString("alarm_set"),
-      content: AdvColumn(
-          divider: ColumnDivider(8.0),
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text.rich(
-              TextSpan(children: [
-                TextSpan(text: dict.getString("alarm_set_info")),
-                TextSpan(text: " ${df.format(alarmDate)} WIB", style: ts.h8)
-              ]),
-            ),
-            AdvCountdown(futureDate: alarmDate),
-            CachedNetworkImage(
-                imageUrl:
-                    "https://upload.wikimedia.org/wikipedia/commons/7/7a/Alarm_Clock_GIF_Animation_High_Res.gif"),
-          ]),
     );
   }
 }

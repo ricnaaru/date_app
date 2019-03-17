@@ -27,7 +27,9 @@ dependencies:
   url_launcher: ^5.0.0
   firebase_database: 1.0.5
   firebase_core: 0.2.5+1
+  firebase_messaging: 2.1.0
   flutter_list_drag_and_drop: ^0.1.6
+  flutter_local_notifications: 0.4.5
 
 dev_dependencies:
   flutter_test:

@@ -17,8 +17,7 @@ class AddEventPage extends StatefulWidget {
   State<StatefulWidget> createState() => _AddEventPageState();
 }
 
-class _AddEventPageState extends AdvState<AddEventPage>
-    with TickerProviderStateMixin {
+class _AddEventPageState extends AdvState<AddEventPage> with TickerProviderStateMixin {
   AdvTextFieldController nameController;
   AdvTextFieldController descController;
   AdvTextFieldController fromTimeController;
@@ -32,16 +31,15 @@ class _AddEventPageState extends AdvState<AddEventPage>
     super.initStateWithContext(context);
     DateDict dict = DateDict.of(context);
 
-    nameController = AdvTextFieldController(
-        label: dict.getString("name"), hint: dict.getString("input_name"));
+    nameController = AdvTextFieldController(label: dict.getString("name"), hint: dict.getString("input_name"));
 
-    descController = AdvTextFieldController(
-        label: dict.getString("description"),
-        hint: dict.getString("input_description"));
+    descController = AdvTextFieldController(label: dict.getString("description"), hint: dict.getString("input_description"));
 
     fromTimeController = AdvTextFieldController(
-        label: dict.getString("from"), hint: dict.getString("time_hint"),
-      text: "9:00 AM",);
+      label: dict.getString("from"),
+      hint: dict.getString("time_hint"),
+      text: "9:00 AM",
+    );
 
     toTimeController = AdvTextFieldController(
       label: dict.getString("to"),
@@ -49,9 +47,7 @@ class _AddEventPageState extends AdvState<AddEventPage>
       text: "9:00 AM",
     );
 
-    locationController = AdvTextFieldController(
-        label: dict.getString("location"),
-        hint: dict.getString("input_location"));
+    locationController = AdvTextFieldController(label: dict.getString("location"), hint: dict.getString("input_location"));
 
     typeController = AdvChooserController(
       text: "personal",
@@ -66,8 +62,7 @@ class _AddEventPageState extends AdvState<AddEventPage>
       ],
     );
 
-    fadeAnimCtrl =
-        AnimationController(duration: Duration(milliseconds: 300), vsync: this);
+    fadeAnimCtrl = AnimationController(duration: Duration(milliseconds: 300), vsync: this);
   }
 
   @override
@@ -84,8 +79,7 @@ class _AddEventPageState extends AdvState<AddEventPage>
         Expanded(
           child: SingleChildScrollView(
             child: AdvColumn(
-                margin: EdgeInsets.symmetric(horizontal: 8.0)
-                    .copyWith(top: 16.0, bottom: 8.0),
+                margin: EdgeInsets.symmetric(horizontal: 8.0).copyWith(top: 16.0, bottom: 8.0),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 divider: ColumnDivider(16.0),
                 children: [
@@ -101,47 +95,38 @@ class _AddEventPageState extends AdvState<AddEventPage>
                     margin: EdgeInsets.symmetric(horizontal: 8.0),
                     child: AdvTextField(controller: locationController),
                   ),
-                  AdvRow(
-                      margin: EdgeInsets.symmetric(horizontal: 8.0),
-                      divider: RowDivider(8.0),
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            child: IgnorePointer(
-                              ignoring: true,
-                              child:
-                                  AdvTextField(controller: fromTimeController),
-                            ),
-                            onTap: () async {
-                              TimeOfDay result = await showTimePicker(
-                                  context: context,
-                                  initialTime: TimeOfDay(hour: 0, minute: 0));
-
-                              if (result != null) {
-                                fromTimeController.text =
-                                    result.format(context);
-                              }
-                            },
-                          ),
+                  AdvRow(margin: EdgeInsets.symmetric(horizontal: 8.0), divider: RowDivider(8.0), children: [
+                    Expanded(
+                      child: InkWell(
+                        child: IgnorePointer(
+                          ignoring: true,
+                          child: AdvTextField(controller: fromTimeController),
                         ),
-                        Expanded(
-                          child: InkWell(
-                            child: IgnorePointer(
-                              ignoring: true,
-                              child: AdvTextField(controller: toTimeController),
-                            ),
-                            onTap: () async {
-                              TimeOfDay result = await showTimePicker(
-                                  context: context,
-                                  initialTime: TimeOfDay(hour: 0, minute: 0));
+                        onTap: () async {
+                          TimeOfDay result = await showTimePicker(context: context, initialTime: TimeOfDay(hour: 0, minute: 0));
 
-                              if (result != null) {
-                                toTimeController.text = result.format(context);
-                              }
-                            },
-                          ),
-                        )
-                      ]),
+                          if (result != null) {
+                            fromTimeController.text = result.format(context);
+                          }
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        child: IgnorePointer(
+                          ignoring: true,
+                          child: AdvTextField(controller: toTimeController),
+                        ),
+                        onTap: () async {
+                          TimeOfDay result = await showTimePicker(context: context, initialTime: TimeOfDay(hour: 0, minute: 0));
+
+                          if (result != null) {
+                            toTimeController.text = result.format(context);
+                          }
+                        },
+                      ),
+                    )
+                  ]),
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 8.0),
                     child: AdvChooserDialog(controller: typeController),
@@ -154,7 +139,16 @@ class _AddEventPageState extends AdvState<AddEventPage>
             dict.getString("next"),
             width: double.infinity,
             onPressed: () {
-              Routing.push(context, AddEventParticipantPage());
+              Routing.push(
+                  context,
+                  AddEventParticipantPage(
+                    name: nameController.text,
+                    description: descController.text,
+                    location: locationController.text,
+                    startTime: fromTimeController.text,
+                    endTime: toTimeController.text,
+                    type: typeController.text,
+                  ));
             },
           ),
           margin: EdgeInsets.all(16.0),

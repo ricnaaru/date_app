@@ -3,10 +3,13 @@ import 'package:date_app/components/adv_checkbox_with_text.dart';
 import 'package:date_app/components/adv_chooser_dialog.dart';
 import 'package:date_app/components/adv_dialog.dart';
 import 'package:date_app/components/hero_dialog_route.dart';
+import 'package:date_app/pages/add_event_member_reorder.dart';
 import 'package:date_app/pages/add_event_setting.dart';
 import 'package:date_app/pages/open_discussion.dart';
+import 'package:date_app/utilities/firebase_database_engine.dart';
 import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/utilities/models.dart';
 import 'package:date_app/utilities/routing.dart';
 import 'package:date_app/utilities/textstyles.dart';
 import 'package:flutter/material.dart';
@@ -14,8 +17,10 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_list_drag_and_drop/drag_and_drop_list.dart';
 import 'package:pit_components/components/adv_button.dart';
 import 'package:pit_components/components/adv_column.dart';
+import 'package:pit_components/components/adv_future_builder.dart';
 import 'package:pit_components/components/adv_group_check.dart';
 import 'package:pit_components/components/adv_list_tile.dart';
+import 'package:pit_components/components/adv_loading_with_barrier.dart';
 import 'package:pit_components/components/adv_radio_button.dart';
 import 'package:pit_components/components/adv_row.dart';
 import 'package:pit_components/components/adv_state.dart';
@@ -25,6 +30,15 @@ import 'package:pit_components/pit_components.dart';
 
 //need to refactor efficiently
 class AddEventParticipantPage extends StatefulWidget {
+  final String name;
+  final String description;
+  final String location;
+  final String startTime;
+  final String endTime;
+  final String type;
+
+  AddEventParticipantPage({this.name, this.description, this.location, this.startTime, this.endTime, this.type});
+
   @override
   State<StatefulWidget> createState() => _AddEventParticipantPageState();
 }
@@ -34,8 +48,6 @@ class _AddEventParticipantPageState extends AdvState<AddEventParticipantPage> {
   List<Member> _filteredMembers = [];
   List<Group> _allGroups;
   List<Group> _filteredGroups = [];
-  bool _reorderMode = false;
-  bool ascOrder = false;
   bool _errNoParticipant = false;
   AdvRadioGroupController crowdTypeController;
   String _crowdType = "personal";
@@ -48,9 +60,6 @@ class _AddEventParticipantPageState extends AdvState<AddEventParticipantPage> {
 
     String personal = dict.getString("personal");
     String group = dict.getString("group");
-
-    _allMembers = members;
-    _allGroups = groups;
 
     crowdTypeController = AdvRadioGroupController(checkedValue: "personal", itemList: [
       RadioGroupItem(
@@ -79,252 +88,133 @@ class _AddEventParticipantPageState extends AdvState<AddEventParticipantPage> {
   Widget advBuild(BuildContext context) {
     DateDict dict = DateDict.of(context);
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (_reorderMode) {
-          setState(() {
-            _reorderMode = false;
-          });
-
-          return false;
-        }
-
-        return true;
-      },
-      child: Scaffold(
-          appBar: AppBar(
-            title: Text(dict.getString("add_participants")),
-            elevation: 0.0,
-            backgroundColor: Colors.white,
-          ),
-          body: Container(
-            color: Colors.white,
-            child: AdvColumn(children: [
-              Expanded(
-                child: AdvColumn(divider: ColumnDivider(16.0), margin: EdgeInsets.only(top: 16.0), children: [
-                  _filteredMembers.length == 1 && _filteredGroups.length == 1
-                      ? null
-                      : AdvRow(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          margin: EdgeInsets.symmetric(horizontal: 8.0),
-                          divider: RowDivider(8.0),
-                          children: _getActions(dict)),
-                  _reorderMode
-                      ? null
-                      : AdvRadioGroup(
-                          divider: 16.0,
-                          controller: crowdTypeController,
-                          callback: (crowdType) {
-                            setState(() {
-                              _crowdType = crowdType;
-                              ascOrder = false;
-
-                              _filteredMembers.clear();
-                              _filteredGroups.clear();
-                            });
-                          },
-                        ),
-                  Expanded(child: _crowdType == "personal" ? _getContentPersonal(context) : _getContentGroup(context))
-                ]),
-              ),
-              Container(
-                padding: EdgeInsets.all(16.0),
-                child: AdvButton(
-                  dict.getString("next"),
-                  width: double.infinity,
-                  onPressed: () {
-                    if (_filteredMembers.length == 0 && _filteredGroups.length == 0) {
-                      setState(() {
-                        _errNoParticipant = true;
-                      });
-                      return;
-                    }
-
-                    if (!_reorderMode) {
-                      setState(() {
-                        _reorderMode = true;
-                      });
-                    } else {
-                      List<dynamic> participants;
-
-                      if (_crowdType == "personal") {
-                        participants = _filteredMembers;
-                      } else {
-                        participants = _filteredGroups;
-                      }
-                      Routing.push(context, AddEventSettingPage(participants));
-                    }
-                  },
-                ),
-              )
-            ]),
-          )),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(dict.getString("add_participants")),
+        elevation: 0.0,
+        backgroundColor: Colors.white,
+      ),
+      body: AdvFutureBuilder(
+        widgetBuilder: _widgetBuilder,
+        futureExecutor: _loadAll,
+      ),
     );
   }
 
-  List<Widget> _getActions(DateDict dict) {
-    if (_reorderMode) {
-      return [
-        Expanded(child: Text(dict.getString("reorder_info"), style: labelStyle)),
-        InkWell(
-          child: Text(dict.getString("shuffle"), style: labelStyle.copyWith(color: systemHyperlinkColor)),
-          onTap: () {
-            setState(() {
-              if (_crowdType == "personal") {
-                _filteredMembers.shuffle();
-              } else {
-                _filteredGroups.shuffle();
-              }
-            });
-          },
-        ),
-        InkWell(
-          child:
-              Text(dict.getString(ascOrder ? "sort_z_a" : "sort_a_z"), style: labelStyle.copyWith(color: systemHyperlinkColor)),
-          onTap: () {
-            if (_crowdType == "personal") {
-              if (ascOrder) {
-                _filteredMembers.sort((item, otherItem) => otherItem.name.compareTo(item.name));
-              } else {
-                _filteredMembers.sort((item, otherItem) => item.name.compareTo(otherItem.name));
-              }
-            } else {
-              if (ascOrder) {
-                _filteredGroups.sort((item, otherItem) => otherItem.name.compareTo(item.name));
-              } else {
-                _filteredGroups.sort((item, otherItem) => item.name.compareTo(otherItem.name));
-              }
-            }
+  Future<bool> _loadAll(BuildContext context) async {
+    _allMembers = await DataEngine.getMember();
+    _allGroups = await DataEngine.getGroup();
 
-            ascOrder = !ascOrder;
+    return true;
+  }
 
-            setState(() {});
-          },
-        )
-      ];
-    } else {
-      String action;
+  Widget _widgetBuilder(BuildContext context) {
+    DateDict dict = DateDict.of(context);
 
+    return AdvLoadingWithBarrier(
+        content: _allMembers == null || _allGroups == null
+            ? Container()
+            : Container(
+                child: AdvColumn(children: [
+                  Expanded(
+                    child: AdvColumn(divider: ColumnDivider(16.0), margin: EdgeInsets.only(top: 16.0), children: [
+                      AdvRow(margin: EdgeInsets.symmetric(horizontal: 16.0), children: [
+                        Expanded(
+                          child: AdvRadioGroup(
+                            divider: 16.0,
+                            controller: crowdTypeController,
+                            callback: (crowdType) {
+                              setState(() {
+                                _crowdType = crowdType;
+
+                                _filteredMembers.clear();
+                                _filteredGroups.clear();
+                              });
+                            },
+                          ),
+                        ),
+                        _filteredMembers.length == 1 && _filteredGroups.length == 1 ? null : _getActions(dict),
+                      ]),
+                      _errNoParticipant
+                          ? Text(dict.getString("err_no_participant"), style: labelStyle.copyWith(color: systemRedColor))
+                          : null,
+                      Expanded(child: _crowdType == "personal" ? _getCheckablePersonal(context) : _getCheckableGroup(context))
+                    ]),
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(16.0),
+                    child: AdvButton(
+                      dict.getString("next"),
+                      width: double.infinity,
+                      onPressed: () {
+                        if (_filteredMembers.length == 0 && _filteredGroups.length == 0) {
+                          setState(() {
+                            _errNoParticipant = true;
+                          });
+                          return;
+                        }
+                        List<dynamic> participants;
+
+                        if (_crowdType == "personal") {
+                          participants = _filteredMembers;
+                        } else {
+                          participants = _filteredGroups;
+                        }
+                        Routing.push(
+                            context,
+                            AddEventMemberReorderPage(
+                                name: widget.name,
+                                description: widget.description,
+                                location: widget.location,
+                                startTime: widget.startTime,
+                                endTime: widget.endTime,
+                                type: widget.type,
+                                crowdType: _crowdType,
+                                selectedMember: participants));
+                      },
+                    ),
+                  )
+                ]),
+              ),
+        isProcessing: _allMembers == null || _allGroups == null);
+  }
+
+  Widget _getActions(DateDict dict) {
+    String action = "check_all";
+
+    if (_allMembers != null && _allGroups != null) {
       if (_crowdType == "personal") {
         action = _filteredMembers.length < _allMembers.length ? "check_all" : "uncheck_all";
       } else {
         action = _filteredGroups.length < _allGroups.length ? "check_all" : "uncheck_all";
       }
-
-      return [
-        _errNoParticipant
-            ? Expanded(child: Text(dict.getString("err_no_participant"), style: labelStyle.copyWith(color: systemRedColor)))
-            : null,
-        InkWell(
-          child: Text(dict.getString(action), style: labelStyle.copyWith(color: systemHyperlinkColor)),
-          onTap: () {
-            setState(() {
-              if (_crowdType == "personal") {
-                if (_filteredMembers.length < _allMembers.length) {
-                  _filteredMembers = _allMembers;
-                } else {
-                  _filteredMembers = [];
-                }
-              } else {
-                if (_filteredGroups.length < _allGroups.length) {
-                  _filteredGroups = _allGroups;
-                } else {
-                  _filteredGroups = [];
-                }
-              }
-            });
-          },
-        )
-      ];
     }
-  }
 
-  Widget _getContentGroup(BuildContext context) {
-    DateDict dict = DateDict.of(context);
-
-    if (_reorderMode) {
-      if (_filteredGroups.length == 1) {
-        return _getSingleGroup();
-      } else {
-        return _getDraggableGroup();
-      }
-    } else {
-      return _getCheckableGroup(dict);
-    }
-  }
-
-  Widget _getSingleGroup() {
-    return AdvColumn(children: [
-      Container(
-        child: AdvListTile(
-          onTap: () {},
-          padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-          start: ClipRRect(
-              borderRadius: BorderRadius.circular(50.0),
-              child: CachedNetworkImage(
-                  imageUrl: _filteredGroups.first.members.first.photo, width: 50.0, height: 50.0, fit: BoxFit.cover)),
-          expanded: Text(_filteredGroups.first.name, style: h9),
-          end: Container(
-            margin: EdgeInsets.all(4.0),
-            width: 20.0,
-            height: 20.0,
-            decoration: ShapeDecoration(shape: CircleBorder(), color: systemPrimaryColor),
-            child: Center(
-                child: Text("${_filteredGroups.indexOf(_filteredGroups.first) + 1}", style: p5.copyWith(color: Colors.white))),
-          ),
-        ),
-        color: Colors.white,
-      ),
-      (_filteredGroups.last == _filteredGroups.first)
-          ? null
-          : Container(height: 0.5, color: Colors.black54, margin: EdgeInsets.symmetric(horizontal: 16.0))
-    ]);
-  }
-
-  Widget _getDraggableGroup() {
-    return DragAndDropList(
-      _filteredGroups,
-      canBeDraggedTo: (int oldIndex, int newIndex) {
-        return true;
-      },
-      onDragFinish: (before, after) {
-        var data = _filteredGroups[before];
-        _filteredGroups.removeAt(before);
-        _filteredGroups.insert(after, data);
-      },
-      dragElevation: 8.0,
-      itemBuilder: (BuildContext context, Group group) {
-        return AdvColumn(children: [
-          Container(
-            child: AdvListTile(
-              onTap: () {},
-              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              start: ClipRRect(
-                  borderRadius: BorderRadius.circular(50.0),
-                  child: CachedNetworkImage(imageUrl: group.members.first.photo, width: 50.0, height: 50.0, fit: BoxFit.cover)),
-              expanded: AdvColumn(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(group.name, style: h9),
-                group.fixedGroup ? Text("Fixed Group", style: p4.copyWith(color: systemDarkerGreyColor)) : null
-              ]),
-              end: Container(
-                margin: EdgeInsets.all(4.0),
-                width: 20.0,
-                height: 20.0,
-                decoration: ShapeDecoration(shape: CircleBorder(), color: systemPrimaryColor),
-                child: Center(child: Text("${_filteredGroups.indexOf(group) + 1}", style: p5.copyWith(color: Colors.white))),
-              ),
-            ),
-            color: Colors.white,
-          ),
-          (_filteredGroups.last == group)
-              ? null
-              : Container(height: 0.5, color: Colors.black54, margin: EdgeInsets.symmetric(horizontal: 16.0))
-        ]);
+    return InkWell(
+      child: Text(dict.getString(action), style: labelStyle.copyWith(color: systemHyperlinkColor)),
+      onTap: () {
+        setState(() {
+          if (_crowdType == "personal") {
+            if (_filteredMembers.length < _allMembers.length) {
+              _filteredMembers = _allMembers;
+            } else {
+              _filteredMembers = [];
+            }
+          } else {
+            if (_filteredGroups.length < _allGroups.length) {
+              _filteredGroups = _allGroups;
+            } else {
+              _filteredGroups = [];
+            }
+          }
+        });
       },
     );
   }
 
-  Widget _getCheckableGroup(DateDict dict) {
+  Widget _getCheckableGroup(BuildContext context) {
+    DateDict dict = DateDict.of(context);
+
     return SingleChildScrollView(
       child: AdvColumn(
           divider: Container(
@@ -352,7 +242,8 @@ class _AddEventParticipantPageState extends AdvState<AddEventParticipantPage> {
                       child: AdvColumn(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("${group.name}${group.fixedGroup ? " (Fixed Group)" : ""}", style: h9),
+//                      Text("${group.name}${group.fixedGroup ? " (Fixed Group)" : ""}", style: h9),
+                      Text("${group.name}", style: h9),
                       AdvRow(
                         children: [
                           Container(
@@ -421,111 +312,9 @@ class _AddEventParticipantPageState extends AdvState<AddEventParticipantPage> {
     );
   }
 
-  Widget _getContentPersonal(BuildContext context) {
+  Widget _getCheckablePersonal(BuildContext context) {
     DateDict dict = DateDict.of(context);
 
-    if (_reorderMode) {
-      if (_filteredGroups.length == 1) {
-        return _getSinglePersonal();
-      } else {
-        return _getDraggablePersonal();
-      }
-    } else {
-      return _getCheckablePersonal(dict);
-    }
-  }
-
-  Widget _getSinglePersonal() {
-    return AdvColumn(children: [
-      Container(
-        child: AdvListTile(
-          onTap: () {},
-          padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-          start: ClipRRect(
-            borderRadius: BorderRadius.circular(50.0),
-            child: CachedNetworkImage(
-              imageUrl: _filteredMembers.first.photo,
-              width: 50.0,
-              height: 50.0,
-              fit: BoxFit.cover,
-            ),
-          ),
-          expanded: Text(_filteredMembers.first.name),
-          end: Container(
-            margin: EdgeInsets.all(4.0),
-            width: 20.0,
-            height: 20.0,
-            decoration: ShapeDecoration(shape: CircleBorder(), color: systemPrimaryColor),
-            child: Center(
-                child: Text("${_filteredMembers.indexOf(_filteredMembers.first) + 1}", style: p5.copyWith(color: Colors.white))),
-          ),
-        ),
-        color: Colors.white,
-      ),
-      (_filteredMembers.last == _filteredMembers.first)
-          ? null
-          : Container(height: 0.5, color: Colors.black54, margin: EdgeInsets.symmetric(horizontal: 16.0))
-    ]);
-  }
-
-  Widget _getDraggablePersonal() {
-    return DragAndDropList(
-      _filteredMembers,
-      canBeDraggedTo: (int oldIndex, int newIndex) {
-        return true;
-      },
-      onDragFinish: (before, after) {
-        var data = _filteredMembers[before];
-        _filteredMembers.removeAt(before);
-        _filteredMembers.insert(after, data);
-      },
-      dragElevation: 8.0,
-      itemBuilder: (BuildContext context, Member member) {
-        return AdvColumn(children: [
-          Container(
-            child: AdvListTile(
-              onTap: () {},
-              padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              start: ClipRRect(
-                borderRadius: BorderRadius.circular(50.0),
-                child: CachedNetworkImage(
-                  imageUrl: member.photo,
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              expanded: Text(member.name),
-              end: Container(
-                margin: EdgeInsets.all(4.0),
-                width: 20.0,
-                height: 20.0,
-                decoration: ShapeDecoration(
-                  shape: CircleBorder(),
-                  color: systemPrimaryColor,
-                ),
-                child: Center(
-                    child: Text(
-                  "${_filteredMembers.indexOf(member) + 1}",
-                  style: p5.copyWith(color: Colors.white),
-                )),
-              ),
-            ),
-            color: Colors.white,
-          ),
-          (_filteredMembers.last == member)
-              ? null
-              : Container(
-                  height: 0.5,
-                  color: Colors.black54,
-                  margin: EdgeInsets.symmetric(horizontal: 16.0),
-                )
-        ]);
-      },
-    );
-  }
-
-  Widget _getCheckablePersonal(DateDict dict) {
     return SingleChildScrollView(
       child: AdvColumn(
           divider: Container(

@@ -39,9 +39,9 @@ class _AddGroupPageState extends AdvState<AddGroupPage> {
     super.initStateWithContext(context);
     DateDict dict = DateDict.of(context);
 
-    _allCheckListItems = members
-        .map((member) => CheckListItem(member.name, icon: member.photo))
-        .toList();
+//    _allCheckListItems = members
+//        .map((member) => CheckListItem(member.name, icon: member.photo))
+//        .toList();
 
     groupNameController = AdvTextFieldController(
         label: dict.getString("name"), hint: dict.getString("input_name"));
