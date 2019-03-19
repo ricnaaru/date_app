@@ -5,6 +5,7 @@ import 'package:date_app/pages/open_discussion.dart';
 import 'package:date_app/utilities/backend.dart';
 import 'package:date_app/utilities/global.dart';
 import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/utilities/models.dart';
 import 'package:date_app/utilities/routing.dart';
 import 'package:date_app/utilities/textstyles.dart';
 import 'package:flutter/material.dart';
@@ -33,7 +34,7 @@ class AddEventSettingPage extends StatefulWidget {
   final String startTime;
   final String endTime;
   final String type;
-  final List<dynamic> participants;
+  final List<Participant> participants;
 
   AddEventSettingPage(
     this.participants, {
@@ -126,7 +127,7 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
   Widget advBuild(BuildContext context) {
     DateDict dict = DateDict.of(context);
 
-    List<Widget> positions = [];
+    List<Widget> positionWidgets = [];
 
     for (int i = 0; i < positionControllers.length; i++) {
       Widget row = AdvRow(crossAxisAlignment: CrossAxisAlignment.end, divider: RowDivider(8.0), children: [
@@ -137,7 +138,7 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
         )
       ]);
 
-      positions.add(row);
+      positionWidgets.add(row);
     }
 
     return WillPopScope(
@@ -197,23 +198,7 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
                         },
                       )
                     ]),
-                    AdvColumn(divider: ColumnDivider(8.0), children: positions),
-                    Align(
-                        alignment: Alignment.centerRight,
-                        child: Material(
-                            color: Colors.white,
-                            child: InkWell(
-                                onTap: () {
-                                  List<String> positions = [];
-
-                                  positionControllers.forEach((controller) {
-                                    positions.add(controller.text);
-                                  });
-
-                                  Routing.push(context, AddEventPositionSettingPage(positions, widget.participants));
-                                },
-                                child: Text(dict.getString("position_qualification_setting"),
-                                    style: labelStyle.copyWith(color: systemHyperlinkColor))))),
+                    AdvColumn(divider: ColumnDivider(8.0), children: positionWidgets),
                   ]),
                   AdvColumn(divider: ColumnDivider(2.0), crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Container(
@@ -269,7 +254,7 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
           Container(
               margin: EdgeInsets.all(18.0),
               child: AdvButton(
-                dict.getString("generate"),
+                dict.getString("next"),
                 width: double.infinity,
                 onPressed: () {
                   List<DateTime> dates = Backend.getDates(
@@ -278,7 +263,44 @@ class _AddEventSettingPageState extends AdvState<AddEventSettingPage> {
                     startDate: startDateController.initialValue,
                     endDate: endDateController.initialValue,
                   );
+//                  String name,
+//                      String description,
+//                  String location,
+//                  String startTime,
+//                  String endTime,
+//                  String type,
+//                  List<Position> positions,
+//                  bool shuffle,
+//                  List<Availability> availabilities,
+//                  List<DateTime> dates,
+
+                  List<Availability> availabilities = [];
                   print("dates[${dates.length}] => $dates");
+
+                  List<Position> positions = [];
+
+                  for (int i = 0; i < positionControllers.length; i++) {
+                    String name = positionControllers[i].text;
+                    int qty = totalPositionControllers[i].counter;
+
+                    positions.add(Position(name: name, qty: qty));
+                  }
+
+                  Routing.push(
+                      context,
+                      AddEventPositionSettingPage(
+                        name: widget.name,
+                        description: widget.description,
+                        location: widget.location,
+                        startTime: widget.startTime,
+                        endTime: widget.endTime,
+                        type: widget.type,
+                        positions: positions,
+                        shuffle: methodController.checkedValue == "shuffle",
+                        availabilities: availabilities,
+                        dates: dates,
+                        participants: widget.participants,
+                      ));
 //                  Backend.generateSchedule(
 //                    name: widget.name,
 //                    description: widget.description,

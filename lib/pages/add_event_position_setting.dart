@@ -12,10 +12,31 @@ import 'package:pit_components/components/adv_row.dart';
 import 'package:pit_components/pit_components.dart';
 
 class AddEventPositionSettingPage extends StatefulWidget {
-  final List<String> positions;
-  final List<dynamic> participants;
+  final String name;
+  final String description;
+  final String location;
+  final String startTime;
+  final String endTime;
+  final String type;
+  final List<Position> positions;
+  final bool shuffle;
+  final List<Availability> availabilities;
+  final List<DateTime> dates;
+  final List<Participant> participants;
 
-  AddEventPositionSettingPage(this.positions, this.participants);
+  AddEventPositionSettingPage({
+    this.name,
+    this.description,
+    this.location,
+    this.startTime,
+    this.endTime,
+    this.type,
+    this.positions,
+    this.shuffle,
+    this.availabilities,
+    this.dates,
+    this.participants,
+  });
 
   @override
   State<StatefulWidget> createState() => _AddEventPositionSettingPageState();
@@ -42,10 +63,12 @@ class _AddEventPositionSettingPageState extends State<AddEventPositionSettingPag
                           margin: EdgeInsets.symmetric(horizontal: 16.0),
                         ),
                         children: widget.positions.map((position) {
-                          if (widget.participants.first is Member) {
-                            return MemberItem(position, widget.participants);
+                          if (widget.participants.first.isMember()) {
+                            return MemberItem(
+                                position.name, widget.participants.map((participant) => participant.getMember()).toList());
                           } else {
-                            return GroupItem(position, widget.participants);
+                            return GroupItem(
+                                position.name, widget.participants.map((participant) => participant.getGroup()).toList());
                           }
                         }).toList()))),
             Container(
@@ -78,6 +101,8 @@ class _MemberItemState extends State<MemberItem> with TickerProviderStateMixin {
     super.initState();
 
     anim = AnimationController(vsync: this, duration: kTabScrollDuration);
+
+    for (Member member in widget.members) {}
   }
 
 //  AnimatedIcon(
@@ -100,25 +125,19 @@ class _MemberItemState extends State<MemberItem> with TickerProviderStateMixin {
 
     return AdvColumn(
         children: [
-      AnimatedBuilder(
-          animation: anim,
-          builder: (BuildContext context, Widget child) {
-            return InkWell(
-                onTap: () {
-                  if (anim.value == 0.0) {
-                    anim.forward();
-                  } else {
-                    anim.reverse();
-                  }
-                },
-                child: AdvRow(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0).copyWith(top: 8.0, bottom: 8.0 - (anim.value * 4.0)),
-                    children: [
-                      Expanded(
-                          child: AdvColumn(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Text(widget.position, style: h7),
-                        Text(description, style: p3),
-                      ])),
+          AnimatedBuilder(
+              animation: anim,
+              builder: (BuildContext context, Widget child) {
+                return InkWell(
+                    onTap: () {
+                      if (anim.value == 0.0) {
+                        anim.forward();
+                      } else {
+                        anim.reverse();
+                      }
+                    },
+                    child: AdvRow(padding: EdgeInsets.symmetric(horizontal: 16.0).copyWith(top: 8.0, bottom: 2.0 + (anim.value * 2.0)), children: [
+                      Expanded(child: Text(widget.position, style: h7)),
                       AnimatedBuilder(
                         animation: anim,
                         child: Icon(Icons.keyboard_arrow_right),
@@ -130,36 +149,42 @@ class _MemberItemState extends State<MemberItem> with TickerProviderStateMixin {
                         },
                       )
                     ]));
-          })
-    ]..add(SizeTransition(
+              })
+        ]
+          ..add(SizeTransition(
             sizeFactor: anim,
             child: AdvColumn(
-                  divider: Container(height: 0.5, color: Colors.black38),
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  margin: EdgeInsets.only(left: 24.0, bottom: 8.0, right: 24.0),
-                  children: widget.members.map((member) {
-                    return InkWell(
-                        onTap: () {
-                          setState(() {
-                            if (checkedMembers.indexOf(member) == -1) {
-                              checkedMembers.add(member);
-                            } else {
-                              checkedMembers.remove(member);
-                            }
-                          });
-                        },
-                        child: AdvRow(margin: EdgeInsets.all(8.0), children: [
-                          Expanded(child: Text(member.name)),
-                          AbsorbPointer(
-                              child: RoundRectCheckbox(
-                            activeColor: systemPrimaryColor,
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            value: checkedMembers.indexOf(member) != -1,
-                            onChanged: (value) {},
-                          ))
-                        ]));
-                  }).toList()),
-            )));
+                divider: Container(height: 0.5, color: Colors.black38),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                margin: EdgeInsets.only(left: 24.0, right: 24.0),
+                children: widget.members.map((member) {
+                  return InkWell(
+                      onTap: () {
+                        setState(() {
+                          if (checkedMembers.indexOf(member) == -1) {
+                            checkedMembers.add(member);
+                          } else {
+                            checkedMembers.remove(member);
+                          }
+                        });
+                      },
+                      child: AdvRow(margin: EdgeInsets.all(8.0), children: [
+                        Expanded(child: Text(member.name)),
+                        AbsorbPointer(
+                            child: RoundRectCheckbox(
+                              activeColor: systemPrimaryColor,
+                              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              value: checkedMembers.indexOf(member) != -1,
+                              onChanged: (value) {},
+                            ))
+                      ]));
+                }).toList()),
+          ))
+          ..add(Container(
+            alignment: Alignment.centerLeft,
+            child: Text(description, style: p3),
+            padding: EdgeInsets.symmetric(horizontal: 16.0).copyWith(top: 2.0 + (anim.value * 2.0), bottom: 8.0),
+          )));
   }
 }
 

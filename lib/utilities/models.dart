@@ -81,6 +81,31 @@ class Holiday {
   }
 }
 
+enum ParticipantType { member, group }
+
+class Participant {
+  final String id;
+  final String name;
+  final String photo;
+  final ParticipantType type;
+  final dynamic source;
+
+  Participant({this.id, this.name, this.photo, this.type, this.source});
+
+  bool isMember() => type == ParticipantType.member;
+
+  bool isGroup() => type == ParticipantType.group;
+
+  Member getMember() => source as Member;
+
+  Group getGroup() => source as Group;
+
+  @override
+  String toString() {
+    return "Member (id: $id, name: $name, type: $type, source: $source)";
+  }
+}
+
 class Member {
   final String id;
   final String name;
@@ -141,7 +166,7 @@ class Position {
   final int qty;
   final List<Member> members;
 
-  Position({this.id, this.name, this.qty, this.members});
+  Position({this.id, this.name, this.qty, List<Member> members}) : this.members = members ?? [];
 
   factory Position.fromJson(String id, Map json) {
     List<Member> members = [];
@@ -177,8 +202,7 @@ class Availability {
     Map rawMember = json['member'];
 
     rawAvailableDates.forEach((key, value) {
-      if (value)
-      availableDates.add(DateTimeHelper.convertFirebaseDate(int.tryParse(key)));
+      if (value) availableDates.add(DateTimeHelper.convertFirebaseDate(int.tryParse(key)));
     });
 
     return Availability(
@@ -191,5 +215,36 @@ class Availability {
   @override
   String toString() {
     return "Availability (id: $id, member: $member, availableDates: $availableDates)";
+  }
+}
+
+class Occurance {
+  final String id;
+  final DateTime date;
+  final List<Member> members;
+
+  Occurance({this.id, this.date, this.members});
+
+  bool findMember(Member member) {
+    return members.where((Member loopMember) => member == loopMember).length > 0;
+  }
+
+  @override
+  String toString() {
+    return "Occurance (id: $id, date: $date, members: $members)";
+  }
+}
+
+class GenerateScheduleCatalyst {
+  final Member member;
+  final int occurancesCount;
+  final int availabilitiesCount;
+  final int availableRolesCount;
+
+  GenerateScheduleCatalyst({this.member, this.occurancesCount, this.availabilitiesCount, this.availableRolesCount});
+
+  @override
+  String toString() {
+    return "GenerateScheduleCatalyst (member: $member, occurancesCount: $occurancesCount, availabilitiesCount: $availabilitiesCount, availableRolesCount: $availableRolesCount)";
   }
 }

@@ -14,7 +14,26 @@ class Backend {
     List<Availability> availabilities,
     List<DateTime> dates,
   }) {
+    List<Occurance> occurances = [];
 
+    for (DateTime eventDate in dates) {
+      List<Member> availableMembers = availabilities
+          .where((availability) {
+            return availability.availableDates.where((availabilityDate) => availabilityDate == eventDate).length > 0;
+          })
+          .map((availability) => availability.member)
+          .toList();
+
+      List<GenerateScheduleCatalyst> catalysts = [];
+
+      for (Member availableMember in availableMembers) {
+        int occurancesCount =
+            occurances.where((occurance) => occurance.members.where((m) => m == availableMember).length > 0).length;
+        int availabilitiesCount =
+            availabilities.firstWhere((availability) => availability.member == availableMember).availableDates.length;
+        int availableRolesCount;
+      }
+    }
   }
 
   static List<DateTime> getDates({String eventPeriod, int customDaysInterval, DateTime startDate, DateTime endDate}) {

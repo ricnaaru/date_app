@@ -4,17 +4,10 @@
 
 package ric.com.dateapp;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.PowerManager;
-import android.support.v4.content.LocalBroadcastManager;
-import android.view.Gravity;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.ImageView;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.dexterous.flutterlocalnotifications.FlutterLocalNotificationsPlugin;
 import com.dexterous.flutterlocalnotifications.models.NotificationDetails;
@@ -73,9 +66,9 @@ public class CustomFirebaseMessagingService extends FirebaseMessagingService {
         if (pm != null) {
             boolean isScreenOn = pm.isScreenOn();
             if (!isScreenOn) {
-                PowerManager.WakeLock wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "MyLock");
+                PowerManager.WakeLock wakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "DateApp:MyLock");
                 wakeLock.acquire(5000);
-                PowerManager.WakeLock wakeLockCpu = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyCpuLock");
+                PowerManager.WakeLock wakeLockCpu = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "DateApp:MyCpuLock");
 
                 wakeLockCpu.acquire(5000);
             }

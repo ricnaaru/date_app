@@ -153,12 +153,12 @@ class _AddEventParticipantPageState extends AdvState<AddEventParticipantPage> {
                           });
                           return;
                         }
-                        List<dynamic> participants;
+                        List<Participant> participants;
 
                         if (_crowdType == "personal") {
-                          participants = _filteredMembers;
+                          participants = _filteredMembers.map((m) => Participant(id: "M${m.id}", name: m.name, photo: m.photo, type: ParticipantType.member, source: m)).toList();
                         } else {
-                          participants = _filteredGroups;
+                          participants = _filteredGroups.map((g) => Participant(id: "G${g.id}", name: g.name, photo: g.members.first.photo, type: ParticipantType.member, source: g)).toList();
                         }
                         Routing.push(
                             context,

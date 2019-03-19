@@ -403,15 +403,6 @@ dynamic pickFromDialogChooser(BuildContext context,
 //      "https://firebasestorage.googleapis.com/v0/b/dateapp-6ebae.appspot.com/o/profile_pic_yohana.jpg?alt=media&token=31f5b813-fe03-4c65-a3a4-ec5127984ade"),
 //];
 
-class Position {
-  final String name;
-  final int qty;
-  final List<dynamic> qualifiedParticipants;
-
-  Position({this.name, this.qty, List<dynamic> qualifiedParticipants})
-      : this.qualifiedParticipants = qualifiedParticipants ?? [];
-}
-
 enum ServePosition {
   dateMember,
   dateCoreTeam,

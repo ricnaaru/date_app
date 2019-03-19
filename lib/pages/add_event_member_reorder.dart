@@ -36,7 +36,7 @@ class AddEventMemberReorderPage extends StatefulWidget {
   final String endTime;
   final String type;
   final String crowdType;
-  final List<dynamic> selectedMember;
+  final List<Participant> selectedMember;
 
   AddEventMemberReorderPage(
       {this.name, this.description, this.location, this.startTime, this.endTime, this.type, this.crowdType, this.selectedMember});
@@ -146,7 +146,7 @@ class _AddEventMemberReorderPageState extends AdvState<AddEventMemberReorderPage
           start: ClipRRect(
               borderRadius: BorderRadius.circular(50.0),
               child: CachedNetworkImage(
-                  imageUrl: widget.selectedMember.first.members.first.photo, width: 50.0, height: 50.0, fit: BoxFit.cover)),
+                  imageUrl: widget.selectedMember.first.photo, width: 50.0, height: 50.0, fit: BoxFit.cover)),
           expanded: Text(widget.selectedMember.first.name, style: h9),
           end: Container(
             margin: EdgeInsets.all(4.0),
