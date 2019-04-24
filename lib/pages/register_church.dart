@@ -1,67 +1,41 @@
-import 'package:date_app/components/adv_checkbox_with_text.dart';
-import 'package:date_app/components/roundrect_checkbox.dart';
+import 'package:date_app/presenters/register.dart';
+import 'package:date_app/utilities/constants.dart';
 import 'package:date_app/utilities/localization.dart';
-import 'package:flutter/material.dart';
-import 'package:date_app/utilities/global.dart' as global;
 import 'package:date_app/utilities/textstyles.dart' as ts;
+import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_button.dart';
-import 'package:pit_components/components/adv_chooser.dart';
+import 'package:pit_components/components/adv_checkbox.dart';
 import 'package:pit_components/components/adv_column.dart';
 import 'package:pit_components/components/adv_date_picker.dart';
 import 'package:pit_components/components/adv_row.dart';
-import 'package:pit_components/components/adv_state.dart';
 import 'package:pit_components/components/adv_text_field.dart';
-import 'package:pit_components/components/controllers/adv_chooser_controller.dart';
-import 'package:pit_components/components/controllers/adv_date_picker_controller.dart';
-import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 import 'package:pit_components/mods/mod_checkbox.dart';
 import 'package:pit_components/pit_components.dart';
 
 class RegisterChurchPage extends StatefulWidget {
-  final VoidCallback onCompleted;
+  final RegisterPresenter presenter;
 
-  RegisterChurchPage({this.onCompleted});
+  RegisterChurchPage({@required this.presenter});
 
   @override
   State<StatefulWidget> createState() => _RegisterChurchPageState();
 }
 
-class _RegisterChurchPageState extends AdvState<RegisterChurchPage> {
-  bool _haveBeenBaptized = false;
-  AdvTextFieldController _baptismChurchCtrl;
-  AdvDatePickerController _baptismDateCtrl;
-  AdvTextFieldController _joinJpccSinceCtrl;
-  Map<String, bool> classes = {
-    "Partner's Day": false,
-    "Community of Believer": false,
-    "Community of Leader": false,
-    "Community of Councelor": false,
-    "Deeper Bible": false,
-    "Updating": false,
-    "Preparing Together": false
-  };
+class _RegisterChurchPageState extends State<RegisterChurchPage> {
+  RegisterPresenter _presenter;
 
   @override
-  void initStateWithContext(BuildContext context) {
-    super.initStateWithContext(context);
-    DateDict dict = DateDict.of(context);
-
-    _baptismChurchCtrl = AdvTextFieldController(
-        label: dict.getString("baptism_church"), maxLines: 1);
-    _baptismDateCtrl =
-        AdvDatePickerController(label: dict.getString("baptism_date"));
-
-    _joinJpccSinceCtrl = AdvTextFieldController(
-        label: dict.getString("join_jpcc_since"), maxLines: 1);
+  void initState() {
+    _presenter = widget.presenter;
+    super.initState();
   }
 
   @override
-  Widget advBuild(BuildContext context) {
+  Widget build(BuildContext context) {
     DateDict dict = DateDict.of(context);
 
     return Container(
-        padding: EdgeInsets.symmetric(horizontal: 32.0)
-            .copyWith(top: 0.0, bottom: 16.0),
+        padding: EdgeInsets.symmetric(horizontal: 32.0).copyWith(top: 0.0, bottom: 16.0),
         child: AdvColumn(
           divider: ColumnDivider(16.0),
           children: [
@@ -71,24 +45,26 @@ class _RegisterChurchPageState extends AdvState<RegisterChurchPage> {
                 divider: ColumnDivider(8.0),
                 children: [
                   Container(height: 40.0),
-                  AdvCheckboxWithText(
-                    text: dict.getString("i_have_been_baptized"),
-                    value: _haveBeenBaptized,
-                    onChanged: (bool value) {
+                  InkWell(
+                    onTap: () {
                       setState(() {
-                        _haveBeenBaptized = value;
+                        _presenter.haveBeenBaptized = !_presenter.haveBeenBaptized;
                       });
                     },
+                    child: AdvRow(
+                        padding: EdgeInsets.symmetric(horizontal: 8.0),
+                        divider: RowDivider(8.0),
+                        children: [
+                          AdvCheckbox(
+                            value: _presenter.haveBeenBaptized,
+                          ),
+                          Text(dict.getString("i_have_been_baptized")),
+                        ]),
                   ),
-                  _haveBeenBaptized ? _buildBaptismSection(context) : null,
-                  AdvTextField(
-                    controller: _joinJpccSinceCtrl,
-                    textChangeListener: (oldText, newText) {
-                      print("lalala => ${int.tryParse(newText)}");
-                      if (int.tryParse(newText) > 2050) {
-                        _joinJpccSinceCtrl.text = "2050";
-                      }
-                    },
+                  _presenter.haveBeenBaptized ? _buildBaptismSection(context) : null,
+                  AdvDatePicker(
+                    controller: _presenter.joinJpccSinceCtrl,
+                    onChanged: _presenter.onJoinJpccDateChanged,
                   ),
                   _buildClassHistorySection(context),
                 ],
@@ -98,7 +74,7 @@ class _RegisterChurchPageState extends AdvState<RegisterChurchPage> {
               dict.getString("next"),
               width: double.infinity,
               onPressed: () {
-                if (widget.onCompleted != null) widget.onCompleted();
+                _presenter.nextPage();
               },
             ),
           ],
@@ -109,12 +85,10 @@ class _RegisterChurchPageState extends AdvState<RegisterChurchPage> {
     return AdvColumn(
       divider: ColumnDivider(8.0),
       children: [
-        AdvTextField(controller: _baptismChurchCtrl),
+        AdvTextField(controller: _presenter.baptismChurchCtrl),
         AdvDatePicker(
-          controller: _baptismDateCtrl,
-          onChanged: (List value) {
-            _baptismDateCtrl.initialValue = value.first;
-          },
+          controller: _presenter.baptismDateCtrl,
+          onChanged: _presenter.onBaptizedDateChanged,
         ),
       ],
     );
@@ -128,28 +102,20 @@ class _RegisterChurchPageState extends AdvState<RegisterChurchPage> {
       children: [
         Text(
           dict.getString("class_history"),
-          style:
-              ts.h8.merge(TextStyle(color: PitComponents.textFieldLabelColor)),
+          style: ts.h8.merge(TextStyle(color: PitComponents.textFieldLabelColor)),
         )
-      ]..addAll(classes.keys.map((className) {
+      ]..addAll(_presenter.classes.keys.map((className) {
           return InkWell(
             child: AdvRow(children: [
               Container(
-                  child: RoundCheckbox(
-                      activeColor: global.systemPrimaryColor,
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      onChanged: (bool value) {
-                        setState(() {
-                          classes[className] = value;
-                        });
-                      },
-                      value: classes[className]),
+                  child: AdvCheckbox(
+                      activeColor: CompanyColors.primary, value: _presenter.classes[className]),
                   margin: EdgeInsets.all(8.0)),
               Expanded(child: Text(className)),
             ]),
             onTap: () {
               setState(() {
-                classes[className] = !classes[className];
+                _presenter.classes[className] = !_presenter.classes[className];
               });
             },
           );

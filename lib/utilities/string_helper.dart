@@ -13,7 +13,7 @@ class StringHelper {
 
   static List<TextSpan> parseStringToTextSpan(String fullString, List<String> findString) {
     String stringWithSmallestIndex =
-    _findWordWithSmallestIndex(fullString, findString, startFindFrom: 0);
+        _findWordWithSmallestIndex(fullString, findString, startFindFrom: 0);
     int index = fullString.indexOf(stringWithSmallestIndex);
     int startCropFrom = 0;
     List<TextSpan> textSpans = [];
@@ -63,5 +63,28 @@ class StringHelper {
       i++;
     }
     return wordWithSmallestIndex ?? findString[0];
+  }
+
+  static String createOrdinalString(Locale locale, int number, {String prefix}) {
+    if (locale.languageCode == "en") {
+      return "${_numberToOrdinal(number)}${(prefix ?? "").isEmpty ? "" : " $prefix"}";
+    } else if (locale.languageCode == "id") {
+      return "${(prefix ?? "").isEmpty ? "" : "$prefix ke-"}$number";
+    }
+  }
+
+  static String _numberToOrdinal(int number) {
+    String suffix;
+    if (number % 10 == 1) {
+      suffix = "st";
+    } else if (number % 10 == 2) {
+      suffix = "nd";
+    } else if (number % 10 == 3) {
+      suffix = "rd";
+    } else {
+      suffix = "th";
+    }
+
+    return "$number$suffix";
   }
 }

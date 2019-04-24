@@ -1,20 +1,27 @@
 import 'package:date_app/application.dart';
+import 'package:date_app/pages/home.dart';
 import 'package:date_app/pages/home_container.dart';
+import 'package:date_app/pages/login.dart';
 import 'package:date_app/utilities/assets.dart';
-import 'package:date_app/utilities/global.dart' as global;
+import 'package:date_app/utilities/constants.dart';
 import 'package:date_app/utilities/localization.dart';
-import 'package:date_app/utilities/notification_helper.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:date_app/utilities/pref_keys.dart' as prefKeys;
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:pit_components/components/adv_future_builder.dart';
 import 'package:pit_components/pit_components.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-//import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-void main() => runApp(new NemobApp());
+void main() => runApp(NemobApp());
+
+class ComponentsConfig {
+  static Color sequenceLineColor = systemYellowColor;
+  static Color sequenceInitialColor = systemBlueColor;
+  static Color sequenceFilledColor = systemHyperlinkColor;
+  static double sequenceTitleContentRatio = 0.3;
+  static double sequenceBoxSize = 40.0;
+  static double sequenceDividerWidth = 16.0;
+}
 
 class NemobApp extends StatefulWidget {
   @override
@@ -32,27 +39,27 @@ class _NemobAppState extends State<NemobApp> {
     super.initState();
     application.onLocaleChanged = onLocaleChange;
 
-    NotificationHelper.init(
-      onMessage: (Map<String, dynamic> message) async {
-        print("onMessage fired! => $message");
-        var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
-            'your channel id', 'your channel name', 'your channel description',
-            importance: Importance.Max, priority: Priority.High);
-        var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
-        var platformChannelSpecifics = new NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-        await FlutterLocalNotificationsPlugin()
-            .show(0, 'plain title', 'plain body', platformChannelSpecifics, payload: 'item id 2');
-      },
-      onLaunch: (Map<String, dynamic> message) {
-        print("onLaunch fired! => $message");
-      },
-      onResume: (Map<String, dynamic> message) {
-        print("onResume fired! => $message");
-      },
-      onTokenRefresh: (String token) {
-        print("onTokenRefresh fired! => $token");
-      },
-    );
+//    NotificationHelper.init(
+//      onMessage: (Map<String, dynamic> message) async {
+//        print("onMessage fired! => $message");
+//        var androidPlatformChannelSpecifics = new AndroidNotificationDetails(
+//            'your channel id', 'your channel name', 'your channel description',
+//            importance: Importance.Max, priority: Priority.High);
+//        var iOSPlatformChannelSpecifics = new IOSNotificationDetails();
+//        var platformChannelSpecifics = new NotificationDetails(androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+//        await FlutterLocalNotificationsPlugin()
+//            .show(0, 'plain title', 'plain body', platformChannelSpecifics, payload: 'item id 2');
+//      },
+//      onLaunch: (Map<String, dynamic> message) {
+//        print("onLaunch fired! => $message");
+//      },
+//      onResume: (Map<String, dynamic> message) {
+//        print("onResume fired! => $message");
+//      },
+//      onTokenRefresh: (String token) {
+//        print("onTokenRefresh fired! => $token");
+//      },
+//    );
 
 //    NotificationHelper.getToken();
 //    NotificationHelper.getToken();
@@ -70,9 +77,11 @@ class _NemobAppState extends State<NemobApp> {
       futureExecutor: getPrefs,
       widgetBuilder: (BuildContext context) {
         if (prefs != null) {
-          final String localeString = (prefs.getString(global.locale) ?? "id");
+          final String localeString = (prefs.getString(prefKeys.kLocale) ?? "id");
+          final String userId = (prefs.getString(prefKeys.kUserId) ?? "");
+          print("userId => $userId");
           _locale = Locale(localeString);
-          _widget = DateAppHome();
+          _widget = userId.isEmpty ? LoginPage() : HomeContainerPage(); //RegisterPage();
 
           return MaterialApp(
             debugShowCheckedModeBanner: false,
@@ -87,10 +96,10 @@ class _NemobAppState extends State<NemobApp> {
             ],
             theme: new ThemeData(
                 brightness: Brightness.light,
-                primarySwatch: global.CompanyColors.primary,
-                primaryColor: global.CompanyColors.primary[500],
+                primarySwatch: CompanyColors.primary,
+                primaryColor: CompanyColors.primary[500],
                 primaryColorBrightness: Brightness.light,
-                accentColor: global.CompanyColors.accent[500],
+                accentColor: CompanyColors.accent[500],
                 accentColorBrightness: Brightness.light,
                 scaffoldBackgroundColor: Colors.white),
             home: _widget,
@@ -106,21 +115,25 @@ class _NemobAppState extends State<NemobApp> {
 
   Future<bool> getPrefs(BuildContext context) async {
     prefs ??= await SharedPreferences.getInstance();
-    PitComponents.buttonBackgroundColor = global.CompanyColors.primary[500];
+    PitComponents.buttonBackgroundColor = CompanyColors.primary[500];
     PitComponents.buttonTextColor = Colors.white;
-    PitComponents.textFieldBackgroundColor = global.CompanyColors.accent[50];
-    PitComponents.textFieldBorderColor = global.CompanyColors.primary[500];
-    PitComponents.datePickerBackgroundColor = global.CompanyColors.accent[50];
-    PitComponents.datePickerBorderColor = global.CompanyColors.primary[500];
-    PitComponents.chooserBackgroundColor = global.CompanyColors.accent[50];
-    PitComponents.chooserBorderColor = global.CompanyColors.primary[500];
-    PitComponents.datePickerToolbarColor = global.systemPrimaryColor;
-    PitComponents.datePickerHeaderColor = global.systemPrimaryColor;
-    PitComponents.datePickerSelectedColor = global.systemPrimaryColor;
-    PitComponents.datePickerTodayColor = global.systemGreenColor;
-    PitComponents.groupCheckCheckColor = global.systemPrimaryColor;
-    PitComponents.radioButtonColor = global.systemPrimaryColor;
+    PitComponents.textFieldBackgroundColor = CompanyColors.accent[50];
+    PitComponents.textFieldBorderColor = CompanyColors.primary[500];
+    PitComponents.datePickerBackgroundColor = CompanyColors.accent[50];
+    PitComponents.datePickerBorderColor = CompanyColors.primary[500];
+    PitComponents.chooserBackgroundColor = CompanyColors.accent[50];
+    PitComponents.chooserBorderColor = CompanyColors.primary[500];
+    PitComponents.datePickerToolbarColor = CompanyColors.primary;
+    PitComponents.datePickerHeaderColor = CompanyColors.primary;
+    PitComponents.datePickerSelectedColor = CompanyColors.primary;
+    PitComponents.datePickerTodayColor = systemGreenColor;
+    PitComponents.groupCheckCheckColor = CompanyColors.primary;
+    PitComponents.radioButtonColor = CompanyColors.primary;
     PitComponents.loadingAssetName = Assets.hLoading;
+    PitComponents.editableMargin = EdgeInsets.all(0.0);
+
+    await precacheImage(AssetImage(Assets.logoBlack), context);
+
     return true;
   }
 

@@ -1,12 +1,9 @@
 import 'dart:async';
 
 import 'package:date_app/application.dart';
-import 'package:date_app/components/adv_dialog.dart';
-import 'package:date_app/utilities/string_helper.dart';
 import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:pit_components/components/adv_column.dart';
 
 class DateDict {
   DateDict({Locale locale}) : this.locale = locale ?? const Locale("en");
@@ -24,6 +21,12 @@ class DateDict {
         'in_a_relationship': 'Pacaran',
         'married': 'Menikah',
         'single': 'Lajang'
+      },
+      "academic_degree": {
+        'd': 'Diploma',
+        's1': 'Sarjana',
+        's2': 'Magister',
+        's3': 'Doktor'
       },
       "event_period": {
         'once': 'Sekali',
@@ -49,6 +52,12 @@ class DateDict {
         'in_a_relationship': 'In a Relationship',
         'married': 'Married',
         'single': 'Single'
+      },
+      "academic_degree": {
+        'd': 'Diploma',
+        's1': 'Bachelor',
+        's2': 'Magister',
+        's3': 'Doctorate'
       },
       "event_period": {
         'once': 'Once',
@@ -111,6 +120,9 @@ class DateDict {
       'christmas': "Hari Natal",
       'church_information': "Informasi Gereja",
       'class_history': "Riwayat Kelas",
+      'class_year': "Tahun Angkatan",
+      'click_to_add_profession': "Klik tombol di atas untuk menambahkan informasi tambahanmu",
+      'college': "Info Kuliah",
       'community': "Komunitas",
       'company': "Perusahaan",
       'company_address': "Alamat Perusahaan",
@@ -122,16 +134,19 @@ class DateDict {
       'day': "hari",
       'days': "hari",
       'days_interval': "Interval hari",
+      'degree': "Gelar",
       'description': "Deskripsi",
       'eid_alfitr': "Hari Raya Idul Fitri",
       'eid_aladha': "Hari Raya Idul Adha",
       'email': "Email",
-      'employee': "Karyawan",
+      'job': "Info Pekerjaan",
       'end_date': "Sampai Tanggal",
-      'entrepreneur': "Wirausaha",
-      'err_no_option_selected':
-          "Mohon tentukan pilihan anda dari beberapa pilihan ini",
+      'business': "Info Usaha",
+      'err_no_option_selected': "Mohon tentukan pilihan anda dari beberapa pilihan ini",
       'err_no_participant': "Mohon pilih peserta terlebih dahulu",
+      'err_username_empty': "Harap mengisi username!",
+      'err_password_empty': "Harap mengisi password!",
+      'err_password_not_match': "ID dan Password tidak ditemukan",
       'event': "Acara",
       'event_detail': "Detil Acara",
       'from': "Dari",
@@ -167,7 +182,9 @@ class DateDict {
       'notification': "Notifikasi",
       'no_event': "Tidak ada acara",
       'office_address': "Alamat Kantor",
+      'ok': "OK",
       'open_discussion': "Mulai Diskusi",
+      'open_since': "Dibuka sejak",
       'pancasila': "Hari Lahir Pancasila",
       'participant': "Peserta",
       'participants': "Peserta",
@@ -177,24 +194,23 @@ class DateDict {
       'phone_number': "No Telp",
       'position': "Posisi",
       'position_qualification_setting': "Pengaturan Kualifikasi Posisi",
-      'registration_success':
-          "Kamu telah terdaftar di sistem kami\nSiap menelusuri DATE App?!",
+      'registration_success': "Kamu telah terdaftar di sistem kami\nSiap menelusuri DATE App?!",
       'remind_me': "Remind me!",
-      'reorder_info':
-          "Ketuk dan tahan kemudian drag dan drop item untuk mengurutkan ulang",
+      'reorder_info': "Ketuk dan tahan kemudian drag dan drop item untuk mengurutkan ulang",
       's_birthday': "Ulang tahun {name}",
       'second': "detik",
       'seconds': "detik",
+      'select_availability': "Pilih Ketersediaan",
+      'select_availability_info': "Pilih tanggal yang anda bisa, untuk dimasukkan ke dalam jadwal",
       'semester': "Semester",
-      'shop_address': "Alamat Toko",
-      'shop_description': "Deskripsi Toko",
-      'shop_name': "Nama Toko",
+      'business_address': "Alamat Usaha",
+      'business_description': "Deskripsi Usaha",
+      'business_name': "Nama Usaha",
       'show_age': "Tampilkan umum saya ke publik",
       'shuffle': "Acak",
       'sort_a_z': "Urutkan dari A ke Z",
       'sort_z_a': "Urutkan dari Z ke A",
       'start_date': "Dari Tanggal",
-      'student': "Mahasiswa",
       'submit': "Selesai",
       'take_the_vote': "Ikuti Vote ini",
       'thank_you_vote_submitted': "Terima kasih, pilihanmu telah tersimpan!",
@@ -206,6 +222,8 @@ class DateDict {
       'vesak': "Hari Raya Waisak",
       'voting': "Voting",
       'working_since': "Bekerja sejak",
+      'login': "Login",
+      'register': "Daftar",
     },
     'en': {
       'account': "Account",
@@ -234,6 +252,10 @@ class DateDict {
       'christmas': "Christmas Day",
       'church_information': "Church Information",
       'class_history': "Class History",
+      'class_year': "Class Year",
+      'click_to_add_profession': "Click buttons above to add your additional information",
+      'college': "College",
+      'college_information': "College Information",
       'community': "Community",
       'company': "Company",
       'company_address': "Company Address",
@@ -245,13 +267,14 @@ class DateDict {
       'day': "day",
       'days': "days",
       'days_interval': "Days interval",
+      'degree': "Degree",
       'description': "Description",
       'eid_alfitr': "Eid al-Fitr Holiday",
       'eid_aladha': "Eid al-Adha Holiday",
       'email': "Email",
-      'employee': "Employee",
+      'job': "Job Info",
       'end_date': "Until Date",
-      'entrepreneur': "Entrepreneur",
+      'business': "Business Info",
       'err_no_option_selected': "Please pick one of these options",
       'err_no_participant': "Please select at least one participant first",
       'event': "Event",
@@ -291,7 +314,9 @@ class DateDict {
       'no_event': "No Event",
       'nyepi': "Nyepi Holiday",
       'office_address': "Office Address",
+      'ok': "OK",
       'open_discussion': "Open Discussion",
+      'open_since': "Open Since",
       'pancasila': "Pancasila Day",
       'participant': "Participant",
       'participants': "Participants",
@@ -301,23 +326,23 @@ class DateDict {
       'phone_number': "Phone Number",
       'position': "Position",
       'position_qualification_setting': "Position Qualification Setting",
-      'registration_success':
-          "You have been registered to our system\nNow you're good to go!",
+      'registration_success': "You have been registered to our system\nNow you're good to go!",
       'remind_me': "Remind me!",
       'reorder_info': "Tap and hold then drag and drop item to reorder",
       'second': "second",
       'seconds': "seconds",
+      'select_availability': "Select Availability",
+      'select_availability_info': "Choose your available date to be put in the schedule",
       'semester': "Semester",
       's_birthday': "{name}'s Birthday",
-      'shop_address': "Shop Address",
-      'shop_description': "Shop Description",
-      'shop_name': "Shop Name",
+      'business_address': "business Address",
+      'business_description': "business Description",
+      'business_name': "business Name",
       'show_age': "Show my age to public",
       'shuffle': "Shuffle",
       'start_date': "Start Date",
       'sort_a_z': "Sort A to Z",
       'sort_z_a': "Sort Z to A",
-      'student': "Student",
       'submit': "Submit",
       'take_the_vote': "Take the Vote",
       'thank_you_vote_submitted': "Thank you, your vote has been submitted!",
@@ -329,6 +354,11 @@ class DateDict {
       'vesak': "Vesak Holiday",
       'voting': "Voting",
       'working_since': "Working Since",
+      'login': "Login",
+      'register': "Register",
+      'err_username_empty': "Please fill username!",
+      'err_password_empty': "Please fill password!",
+      'err_password_not_match': "ID and Password not found",
     },
   };
 
@@ -336,9 +366,7 @@ class DateDict {
     Map<String, String> localizedValue =
         _localizedValues[locale.languageCode] ?? _localizedValues["en"];
 
-    return localizedValue[value] ??
-        _localizedValues["en"][value] ??
-        "Raw $value";
+    return localizedValue[value] ?? _localizedValues["en"][value] ?? "Raw $value";
   }
 
   Map<String, String> getMap(String value) {
@@ -361,9 +389,8 @@ class DateDict {
     int hour = (duration.inHours.abs() % 24);
     int minute = (duration.inMinutes.abs() % 60);
     int second = (duration.inSeconds.abs() % 60);
-    String dayString = day == 0
-        ? ""
-        : "$day ${day.abs() == 1 ? this.getString("day") : this.getString("days")}";
+    String dayString =
+        day == 0 ? "" : "$day ${day.abs() == 1 ? this.getString("day") : this.getString("days")}";
     String hourString = hour == 0
         ? ""
         : "$hour ${hour.abs() == 1 ? this.getString("hour") : this.getString("hours")}";
@@ -384,18 +411,14 @@ class DateDict {
     result = minuteString == ""
         ? result
         : result == ""
-            ? hourString == "" && dayString == ""
-                ? "$minuteString"
-                : "and $minuteString"
+            ? hourString == "" && dayString == "" ? "$minuteString" : "and $minuteString"
             : "$minuteString $result";
     result = hourString == ""
         ? result
         : result == ""
             ? dayString == "" ? "$hourString" : "and $hourString"
             : "$hourString $result";
-    result = dayString == ""
-        ? result
-        : result == "" ? "and $dayString" : "$dayString $result";
+    result = dayString == "" ? result : result == "" ? "and $dayString" : "$dayString $result";
 
     return (duration.isNegative ? "-$result" : result);
   }
@@ -412,8 +435,7 @@ class DateLocalizationsDelegate extends LocalizationsDelegate<DateDict> {
 
   @override
   Future<DateDict> load(Locale locale) {
-    return SynchronousFuture<DateDict>(
-        DateDict(locale: this.overriddenLocale ?? locale));
+    return SynchronousFuture<DateDict>(DateDict(locale: this.overriddenLocale ?? locale));
   }
 
   @override

@@ -5,8 +5,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.3.2'
-        classpath 'com.google.gms:google-services:4.0.1'
+        classpath 'com.android.tools.build:gradle:3.2.1'
     }
 }
 
@@ -23,18 +22,6 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(':app')
-
-    //untuk error
-    //Android dependency 'com.android.support:support-fragment' has different version for the compile (26.1.0) and runtime (27.1.1) classpath.
-    //You should manually set the same version via DependencyResolution
-    project.configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'com.android.support'
-                    && !details.requested.name.contains('multidex') ) {
-                details.useVersion "27.1.0"
-            }
-        }
-    }
 }
 
 task clean(type: Delete) {

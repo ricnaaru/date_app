@@ -1,7 +1,7 @@
 import 'package:date_app/components/mini_checkbox.dart';
+import 'package:date_app/main.dart';
 import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_row.dart';
-import 'package:date_app/utilities/global.dart' as global;
 
 const int _kEachItemDuration = 250;
 
@@ -18,33 +18,32 @@ class SequenceItem {
 
 class Sequence extends StatefulWidget {
   final List<SequenceItem> children;
-  final double size;
+  final double boxSize;
   final Color lineColor;
-  final Color startColor;
-  final Color endColor;
+  final Color initialColor;
+  final Color filledColor;
   final double dividerWidth;
   final SequenceController controller;
   final double titleContentRatio;
 
   Sequence(
       {@required this.children,
-      double size,
+      double boxSize,
       Color lineColor,
-      Color startColor,
-      Color endColor,
+      Color initialColor,
+      Color filledColor,
       double dividerWidth,
       int selectedIndex,
       SequenceController controller,
       double titleContentRatio})
       : assert(selectedIndex == null || controller == null),
-        this.size = size ?? 40.0,
-        this.lineColor = lineColor ?? global.systemBlueColor,
-        this.startColor = startColor ?? global.systemYellowColor,
-        this.endColor = lineColor ?? global.systemGreenColor,
-        this.dividerWidth = dividerWidth ?? 20.0,
-        this.controller =
-            controller ?? SequenceController(selectedIndex: selectedIndex ?? 0),
-        this.titleContentRatio = titleContentRatio ?? 0.3;
+        this.boxSize = boxSize ?? ComponentsConfig.sequenceBoxSize,
+        this.lineColor = lineColor ?? ComponentsConfig.sequenceLineColor,
+        this.initialColor = initialColor ?? ComponentsConfig.sequenceInitialColor,
+        this.filledColor = lineColor ?? ComponentsConfig.sequenceFilledColor,
+        this.dividerWidth = dividerWidth ?? ComponentsConfig.sequenceDividerWidth,
+        this.controller = controller ?? SequenceController(selectedIndex: selectedIndex ?? 0),
+        this.titleContentRatio = titleContentRatio ?? ComponentsConfig.sequenceTitleContentRatio;
 
   @override
   State<StatefulWidget> createState() => _SequenceState();
@@ -64,10 +63,8 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
   void dispose() {
     super.dispose();
     mainController.dispose();
-    for (AnimationController borderController in borderControllers)
-      borderController.dispose();
-    for (AnimationController colorController in colorControllers)
-      colorController.dispose();
+    for (AnimationController borderController in borderControllers) borderController.dispose();
+    for (AnimationController colorController in colorControllers) colorController.dispose();
     _pageController.dispose();
     _bodyPageController.dispose();
     _scrollController.dispose();
@@ -80,8 +77,8 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
 
     int totalDuration = 300 + (_kEachItemDuration * totalItem);
 
-    mainController = AnimationController(
-        duration: Duration(milliseconds: totalDuration), vsync: this);
+    mainController =
+        AnimationController(duration: Duration(milliseconds: totalDuration), vsync: this);
 
     double totalPortion = 0.5;
 
@@ -108,12 +105,12 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
 
       scaleAnimations.add(scaleAnimation);
 
-      AnimationController colorController = AnimationController(
-          duration: Duration(milliseconds: 200), vsync: this);
+      AnimationController colorController =
+          AnimationController(duration: Duration(milliseconds: 200), vsync: this);
 
       Animation<Color> colorAnimation = ColorTween(
-        begin: widget.startColor,
-        end: widget.endColor,
+        begin: widget.initialColor,
+        end: widget.filledColor,
       ).animate(colorController);
 
       Animation<double> checkboxScaleAnimation = Tween<double>(
@@ -129,8 +126,8 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
       colorAnimations.add(colorAnimation);
       checkboxScaleAnimations.add(checkboxScaleAnimation);
 
-      AnimationController borderController = AnimationController(
-          duration: Duration(milliseconds: 200), vsync: this);
+      AnimationController borderController =
+          AnimationController(duration: Duration(milliseconds: 200), vsync: this);
 
       borderController.addListener(() {
         setState(() {});
@@ -161,26 +158,22 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
     }
 
     widget.controller.addListener(() {
-      double startSupposeScroll =
-          ((widget.controller.selectedIndex) * widget.size) +
-              ((widget.controller.selectedIndex) * widget.dividerWidth);
-      double endSupposeScroll =
-          ((widget.controller.selectedIndex + 1) * widget.size) +
-              ((widget.controller.selectedIndex + 2) * widget.dividerWidth);
+      double startSupposeScroll = ((widget.controller.selectedIndex) * widget.boxSize) +
+          ((widget.controller.selectedIndex) * widget.dividerWidth);
+      double endSupposeScroll = ((widget.controller.selectedIndex + 1) * widget.boxSize) +
+          ((widget.controller.selectedIndex + 2) * widget.dividerWidth);
       double startVisiblePosition = _scrollController.offset;
       double endVisiblePosition = _scrollController.offset + _maxWidth;
 
       if (_scrollController.hasClients) {
         if (endSupposeScroll > endVisiblePosition) {
           _scrollController.animateTo(
-              (endSupposeScroll - _maxWidth)
-                  .clamp(0.0, _scrollController.position.maxScrollExtent),
+              (endSupposeScroll - _maxWidth).clamp(0.0, _scrollController.position.maxScrollExtent),
               duration: Duration(milliseconds: 200),
               curve: Curves.ease);
         } else if (startSupposeScroll < startVisiblePosition) {
           _scrollController.animateTo(
-              (startSupposeScroll)
-                  .clamp(0.0, _scrollController.position.maxScrollExtent),
+              (startSupposeScroll).clamp(0.0, _scrollController.position.maxScrollExtent),
               duration: Duration(milliseconds: 200),
               curve: Curves.ease);
         }
@@ -211,11 +204,9 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
       }
     });
 
-    _pageController =
-        PageController(initialPage: widget.controller.selectedIndex);
+    _pageController = PageController(initialPage: widget.controller.selectedIndex);
 
-    _bodyPageController =
-        PageController(initialPage: widget.controller.selectedIndex);
+    _bodyPageController = PageController(initialPage: widget.controller.selectedIndex);
   }
 
   double _maxWidth = 0.0;
@@ -245,8 +236,7 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
             ),
             Container(
               height: maxHeight * (1.0 - widget.titleContentRatio),
-              margin:
-                  EdgeInsets.only(top: maxHeight * widget.titleContentRatio),
+              margin: EdgeInsets.only(top: maxHeight * widget.titleContentRatio),
               child: PageView(
                   controller: _bodyPageController,
                   physics: NeverScrollableScrollPhysics(),
@@ -256,7 +246,7 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
             ),
             Positioned(
                 bottom: maxHeight * (1.0 - widget.titleContentRatio) -
-                    ((widget.size / 2) + ((widget.size * 0.375 / 2) + 4.0)),
+                    ((widget.boxSize / 2) + ((widget.boxSize * 0.375 / 2) + 4.0)),
                 left: 0.0,
                 right: 0.0,
                 child: AnimatedBuilder(
@@ -264,17 +254,17 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
                     List<Widget> children = [];
 
                     for (int i = 0; i < total; i++) {
-                      double borderWidth = widget.size * 0.2;
-                      double borderRadiusSize = widget.size * 0.1;
+                      double borderWidth = widget.boxSize * 0.2;
+                      double borderRadiusSize = widget.boxSize * 0.1;
                       SequenceItem child = widget.children[i];
                       Widget indicator;
                       if (child.indicator is Icon) {
                         Icon transitionIcon = child.indicator as Icon;
-                        Color color = Color.lerp(widget.endColor,
-                            widget.startColor, colorControllers[i].value);
+                        Color color = Color.lerp(
+                            widget.filledColor, widget.initialColor, colorControllers[i].value);
 
                         indicator = Icon(transitionIcon.icon, color: color);
-                      } else{
+                      } else {
                         indicator = child.indicator;
                       }
 
@@ -282,24 +272,22 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
                         scale: scaleAnimations[i],
                         child: Stack(alignment: Alignment.center, children: [
                           Container(
-                            height: widget.size,
-                            width: widget.size, //colorAnimations[i].value,
+                            height: widget.boxSize,
+                            width: widget.boxSize, //colorAnimations[i].value,
                             decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.circular(borderRadiusSize),
-                              color: widget.endColor,
+                              borderRadius: BorderRadius.circular(borderRadiusSize),
+                              color: widget.filledColor,
                             ),
                           ),
                           Container(
-                            height: widget.size -
+                            height: widget.boxSize -
                                 (borderWidth * borderControllers[i].value) +
                                 (borderWidth * colorControllers[i].value),
-                            width: widget.size -
+                            width: widget.boxSize -
                                 (borderWidth * borderControllers[i].value) +
                                 (borderWidth * colorControllers[i].value),
                             decoration: BoxDecoration(
-                              borderRadius:
-                                  BorderRadius.circular(borderRadiusSize),
+                              borderRadius: BorderRadius.circular(borderRadiusSize),
                               color: colorAnimations[i].value,
                             ),
                           ),
@@ -314,20 +302,13 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
                                   scale: checkboxScaleAnimations[i],
                                   child: MiniCheckbox(
                                     value: widget.controller.selectedIndex > i,
-                                    activeColor:
-                                        widget.controller.selectedIndex >= i
-                                            ? Color.lerp(widget.endColor,
-                                                Colors.black87, 0.4)
-                                            : Color.lerp(widget.startColor,
-                                                Colors.black87, 0.4),
-                                    inactiveColor:
-                                        widget.controller.selectedIndex >= i
-                                            ? Color.lerp(widget.endColor,
-                                                Colors.black87, 0.4)
-                                            : Color.lerp(widget.startColor,
-                                                Colors.black87, 0.4),
-                                    size: borderControllers[i].value *
-                                        (widget.size * 0.375),
+                                    activeColor: widget.controller.selectedIndex >= i
+                                        ? Color.lerp(widget.filledColor, Colors.black87, 0.4)
+                                        : Color.lerp(widget.initialColor, Colors.black87, 0.4),
+                                    inactiveColor: widget.controller.selectedIndex >= i
+                                        ? Color.lerp(widget.filledColor, Colors.black87, 0.4)
+                                        : Color.lerp(widget.initialColor, Colors.black87, 0.4),
+                                    size: borderControllers[i].value * (widget.boxSize * 0.28),
                                     vsync: this,
                                   ))),
                           Opacity(
@@ -335,24 +316,19 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
                               child: Material(
                                   color: Colors.transparent,
                                   clipBehavior: Clip.antiAlias,
-                                  borderRadius:
-                                      BorderRadius.circular(borderRadiusSize),
+                                  borderRadius: BorderRadius.circular(borderRadiusSize),
                                   child: InkWell(
                                     child: Container(
-                                      height: widget.size -
-                                          (borderWidth *
-                                              borderControllers[i].value) +
-                                          (borderWidth *
-                                              colorControllers[i].value),
-                                      width: widget.size -
-                                          (borderWidth *
-                                              borderControllers[i].value) +
-                                          (borderWidth *
-                                              colorControllers[i].value),
+                                      height: widget.boxSize -
+                                          (borderWidth * borderControllers[i].value) +
+                                          (borderWidth * colorControllers[i].value),
+                                      width: widget.boxSize -
+                                          (borderWidth * borderControllers[i].value) +
+                                          (borderWidth * colorControllers[i].value),
                                     ),
                                     onTap: () {
                                       if (widget.controller.selectedIndex >= i)
-                                      widget.controller.selectedIndex = i;
+                                        widget.controller.selectedIndex = i;
                                     },
                                   ))),
                         ]),
@@ -360,7 +336,7 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
                     }
                     return Stack(children: [
                       Positioned(
-                          top: (widget.size - 5.0) / 2.0,
+                          top: (widget.boxSize - 5.0) / 2.0,
                           height: 5.0,
                           child: Container(
                               height: 5.0,
@@ -371,15 +347,11 @@ class _SequenceState extends State<Sequence> with TickerProviderStateMixin {
                         scrollDirection: Axis.horizontal,
                         child: Builder(builder: (context) {
                           return Container(
-                              width:
-                                  (_scrollController.position.maxScrollExtent ??
-                                              1.0) >
-                                          0.0
-                                      ? null
-                                      : _maxWidth,
+                              width: (_scrollController.position.maxScrollExtent ?? 1.0) > 0.0
+                                  ? null
+                                  : _maxWidth,
                               child: AdvRow(
-                                  margin: EdgeInsets.only(
-                                      bottom: (widget.size * 0.375 / 2) + 4.0),
+                                  margin: EdgeInsets.only(bottom: (widget.boxSize * 0.375 / 2) + 4.0),
                                   onlyInner: false,
                                   divider: RowDivider(widget.dividerWidth),
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -426,8 +398,7 @@ class SequenceEditingValue {
   static const SequenceEditingValue empty = const SequenceEditingValue();
 
   SequenceEditingValue copyWith({int selectedIndex}) {
-    return new SequenceEditingValue(
-        selectedIndex: selectedIndex ?? this.selectedIndex);
+    return new SequenceEditingValue(selectedIndex: selectedIndex ?? this.selectedIndex);
   }
 
   SequenceEditingValue.fromValue(SequenceEditingValue copy)

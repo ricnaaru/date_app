@@ -1,4 +1,6 @@
+import 'package:date_app/presenters/register.dart';
 import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/view.dart';
 import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_button.dart';
 import 'package:pit_components/components/adv_column.dart';
@@ -7,33 +9,25 @@ import 'package:pit_components/components/adv_text_field.dart';
 import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 
 class RegisterAccountPage extends StatefulWidget {
-  final VoidCallback onCompleted;
+  final RegisterPresenter presenter;
 
-  RegisterAccountPage({this.onCompleted});
+  RegisterAccountPage({@required this.presenter});
 
   @override
   State<StatefulWidget> createState() => _RegisterAccountPageState();
 }
 
-class _RegisterAccountPageState extends AdvState<RegisterAccountPage> {
-  AdvTextFieldController _usernameCtrl;
-  AdvTextFieldController _passwordCtrl;
+class _RegisterAccountPageState extends View<RegisterAccountPage> {
+  RegisterPresenter _presenter;
 
   @override
-  void initStateWithContext(BuildContext context) {
-    super.initStateWithContext(context);
-    DateDict dict = DateDict.of(context);
-
-    _usernameCtrl =
-        AdvTextFieldController(label: dict.getString("username"), maxLines: 1);
-    _passwordCtrl =
-        AdvTextFieldController(label: dict.getString("password"), maxLines: 1);
+  void initState() {
+    _presenter = widget.presenter;
+    super.initState();
   }
 
   @override
-  Widget advBuild(BuildContext context) {
-    DateDict dict = DateDict.of(context);
-
+  Widget buildView(BuildContext context) {
     return Container(
         padding: EdgeInsets.symmetric(horizontal: 32.0)
             .copyWith(top: 0.0, bottom: 16.0),
@@ -46,8 +40,8 @@ class _RegisterAccountPageState extends AdvState<RegisterAccountPage> {
                 divider: ColumnDivider(8.0),
                 children: [
                   Container(height: 40.0),
-                  AdvTextField(controller: _usernameCtrl),
-                  AdvTextField(controller: _passwordCtrl),
+                  AdvTextField(controller: _presenter.usernameCtrl),
+                  AdvTextField(controller: _presenter.passwordCtrl),
                 ],
               )),
             ),
@@ -55,9 +49,7 @@ class _RegisterAccountPageState extends AdvState<RegisterAccountPage> {
               dict.getString("next"),
               width: double.infinity,
               onPressed: () {
-                if (widget.onCompleted != null) widget.onCompleted();
-//                controller.selectedIndex =
-//                    (controller.selectedIndex + 1).clamp(0, 10);
+                _presenter.nextPage();
               },
             ),
           ],

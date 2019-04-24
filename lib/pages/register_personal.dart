@@ -1,68 +1,39 @@
-import 'package:date_app/components/adv_checkbox_with_text.dart';
 import 'package:date_app/components/adv_chooser_dialog.dart';
+import 'package:date_app/presenters/register.dart';
 import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/view.dart';
 import 'package:flutter/material.dart';
-import 'package:date_app/utilities/global.dart' as global;
 import 'package:pit_components/components/adv_button.dart';
-import 'package:pit_components/components/adv_chooser.dart';
+import 'package:pit_components/components/adv_checkbox.dart';
 import 'package:pit_components/components/adv_column.dart';
 import 'package:pit_components/components/adv_date_picker.dart';
-import 'package:pit_components/components/adv_group_check.dart';
-import 'package:pit_components/components/adv_state.dart';
+import 'package:pit_components/components/adv_row.dart';
 import 'package:pit_components/components/adv_text_field.dart';
-import 'package:pit_components/components/controllers/adv_chooser_controller.dart';
-import 'package:pit_components/components/controllers/adv_date_picker_controller.dart';
-import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 
 class RegisterPersonalPage extends StatefulWidget {
-  final VoidCallback onCompleted;
+  final RegisterPresenter presenter;
 
-  RegisterPersonalPage({this.onCompleted});
+  RegisterPersonalPage({@required this.presenter});
 
   @override
   State<StatefulWidget> createState() => _RegisterPersonalPageState();
 }
 
-class _RegisterPersonalPageState extends AdvState<RegisterPersonalPage> {
-  AdvTextFieldController _nameCtrl;
-  AdvDatePickerController _dateOfBirthCtrl;
-  AdvChooserController _maritalStatusCtrl;
-  AdvTextFieldController _addressCtrl;
-  AdvTextFieldController _emailCtrl;
-  AdvTextFieldController _phoneNumberCtrl;
-  bool _showBirthday = true;
+class _RegisterPersonalPageState extends State<RegisterPersonalPage> {
+  RegisterPresenter _presenter;
 
   @override
-  void initStateWithContext(BuildContext context) {
-    super.initStateWithContext(context);
-    DateDict dict = DateDict.of(context);
-    Map<String, String> maritalStatus = dict.getMap("marital_status");
-    List<GroupCheckItem> groupItems = [];
-
-    maritalStatus.forEach((key, value) {
-      groupItems.add(GroupCheckItem(key, value));
-    });
-
-    _nameCtrl =
-        AdvTextFieldController(label: dict.getString("name"), maxLines: 1);
-    _dateOfBirthCtrl =
-        AdvDatePickerController(label: dict.getString("date_of_birth"));
-    _maritalStatusCtrl = AdvChooserController(
-        label: dict.getString("marital_status"), items: groupItems);
-    _addressCtrl = AdvTextFieldController(label: dict.getString("address"));
-    _emailCtrl =
-        AdvTextFieldController(label: dict.getString("email"), maxLines: 1);
-    _phoneNumberCtrl = AdvTextFieldController(
-        label: dict.getString("phone_number"), maxLines: 1);
+  void initState() {
+    _presenter = widget.presenter;
+    super.initState();
   }
 
   @override
-  Widget advBuild(BuildContext context) {
+  Widget build(BuildContext context) {
     DateDict dict = DateDict.of(context);
 
     return Container(
-        padding: EdgeInsets.symmetric(horizontal: 32.0)
-            .copyWith(top: 0.0, bottom: 16.0),
+        padding: EdgeInsets.symmetric(horizontal: 32.0).copyWith(top: 0.0, bottom: 16.0),
         child: AdvColumn(
           divider: ColumnDivider(16.0),
           children: [
@@ -72,24 +43,26 @@ class _RegisterPersonalPageState extends AdvState<RegisterPersonalPage> {
                 divider: ColumnDivider(8.0),
                 children: [
                   Container(height: 40.0),
-                  AdvTextField(controller: _nameCtrl),
+                  AdvTextField(controller: _presenter.nameCtrl),
                   AdvDatePicker(
-                    controller: _dateOfBirthCtrl,
+                    controller: _presenter.dateOfBirthCtrl,
                     onChanged: (List value) {
-                      _dateOfBirthCtrl.initialValue = value.first;
+                      _presenter.dateOfBirthCtrl.initialValue = value.first;
                     },
                   ),
-                  AdvCheckboxWithText(
-                    text: dict.getString("show_age"),
-                    value: _showBirthday,
-                    onChanged: (bool value) {
-                      _showBirthday = value;
-                    },
-                  ),
-                  AdvTextField(controller: _addressCtrl),
-                  AdvChooserDialog(controller: _maritalStatusCtrl),
-                  AdvTextField(controller: _emailCtrl),
-                  AdvTextField(controller: _phoneNumberCtrl),
+                  AdvRow(divider: RowDivider(8.0), children: [
+                    AdvCheckbox(
+                      value: _presenter.showBirthday,
+                      onChanged: (bool value) {
+                        _presenter.showBirthday = value;
+                      },
+                    ),
+                    Text(dict.getString("show_age")),
+                  ]),
+                  AdvTextField(controller: _presenter.addressCtrl),
+                  AdvChooserDialog(controller: _presenter.maritalStatusCtrl),
+                  AdvTextField(controller: _presenter.emailCtrl),
+                  AdvTextField(controller: _presenter.phoneNumberCtrl),
                 ],
               )),
             ),
@@ -97,9 +70,7 @@ class _RegisterPersonalPageState extends AdvState<RegisterPersonalPage> {
               dict.getString("next"),
               width: double.infinity,
               onPressed: () {
-                if (widget.onCompleted != null) widget.onCompleted();
-//                controller.selectedIndex =
-//                    (controller.selectedIndex + 1).clamp(0, 10);
+                _presenter.nextPage();
               },
             ),
           ],

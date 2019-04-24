@@ -1,85 +1,107 @@
-import 'package:date_app/utilities/models.dart';
+import 'package:date_app/models.dart';
+import 'package:date_app/utilities/constants.dart';
+import 'package:date_app/utilities/localization.dart';
+import 'package:date_app/utilities/pref_keys.dart' as prefKeys;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DataEngine {
-  static Future<List<Member>> getMember() async {
-    List<Member> members = [];
-    DataSnapshot snapshot = await FirebaseDatabase.instance.reference().child("members").once();
-    Map<dynamic, dynamic> data = snapshot.value;
-
-    List<String> keys = data.keys.toList().cast<String>();
-
-    keys.sort((var a, var b) => a.compareTo(b));
-
-    for (String key in keys) {
-      members.add(Member.fromJson(key, data[key]));
+  static Future<bool> postMember(MemberModel member) async {
+    DatabaseReference membersRef =
+        await FirebaseDatabase.instance.reference().child("members").push();
+    List<Map<String, dynamic>> occupationMap = [];
+    for (OccupationModel occupation in member.occupations) {
+      occupationMap.add(occupation.toMap());
     }
 
-    return members;
-  }
-  static Future<List<Birthday>> getBirthday() async {
-    List<Birthday> birthdays = [];
-    DataSnapshot snapshot = await FirebaseDatabase.instance.reference().child("birthdays").once();
-    Map<dynamic, dynamic> data = snapshot.value;
+    await membersRef.set(<String, dynamic>{
+      "name": member.name,
+      "birthday": kServerDateFormat.format(member.birthday),
+      "show_birthday": member.showBirthday,
+      "address": member.address,
+      "status": member.status,
+      "email": member.email,
+      "phone_number": member.phoneNumber,
+      "occupations": occupationMap,
+      "have_been_baptized": member.haveBeenBaptized,
+      "church": member.church,
+      "date_of_baptize": kServerDateFormat.format(member.dateOfBaptize),
+      "join_jpcc_since": kServerDateFormat.format(member.joinJpccSince),
+      "class_history": member.classHistory,
+      "username": member.username,
+      "password": member.password,
+    });
 
-    List<String> keys = data.keys.toList().cast<String>();
+    DatabaseReference quickMembersRef =
+        await FirebaseDatabase.instance.reference().child("quick_members/${member.username}");
 
-    keys.sort((var a, var b) => a.compareTo(b));
+    await quickMembersRef.set(<String, dynamic>{
+      "PK": membersRef.key,
+      "password": member.password,
+    });
 
-    for (String key in keys) {
-      print("birthday => ${Birthday.fromJson(key, data[key])}");
-      birthdays.add(Birthday.fromJson(key, data[key]));
-    }
+    SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    return birthdays;
-  }
+    prefs.setString(prefKeys.kUserId, membersRef.key);
 
-  static Future<List<Holiday>> getHoliday() async {
-    List<Holiday> holidays = [];
-    DataSnapshot snapshot = await FirebaseDatabase.instance.reference().child("holidays").once();
-    Map<dynamic, dynamic> data = snapshot.value;
-
-    List<String> keys = data.keys.toList().cast<String>();
-
-    keys.sort((var a, var b) => a.compareTo(b));
-
-    for (String key in keys) {
-      holidays.add(Holiday.fromJson(key, data[key]));
-    }
-
-    return holidays;
+    return true;
   }
 
-  static Future<List<Group>> getGroup() async {
-    List<Group> groups = [];
-    DataSnapshot snapshot = await FirebaseDatabase.instance.reference().child("groups").once();
-    Map<dynamic, dynamic> data = snapshot.value;
+  static Future<bool> login(String username, String password) async {
+    DataSnapshot quickMembersRef =
+        await FirebaseDatabase.instance.reference().child("quick_members/$username").once();
 
-    List<String> keys = data.keys.toList().cast<String>();
+    Map v = quickMembersRef.value;
 
-    keys.sort((var a, var b) => a.compareTo(b));
+    if (v == null) return false;
 
-    for (String key in keys) {
-      groups.add(Group.fromJson(key, data[key]));
-    }
+    String primaryKey;
+    String realPassword;
 
-    return groups;
+    v.forEach((key, value) {
+      print("$password != $realPassword => $key");
+      if (key == "PK") {
+        primaryKey = value;
+      } else if (key == "password") {
+        realPassword = value;
+      }
+    });
+    print("$password != $realPassword => $primaryKey");
+    if (password != realPassword) return false;
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    prefs.setString(prefKeys.kUserId, primaryKey);
+
+    return true;
   }
 
-  static Future<List<Availability>> getAvailabilities() async {
-    List<Availability> availabilities = [];
-    DataSnapshot snapshot = await FirebaseDatabase.instance.reference().child("availabilities").once();
-    Map<dynamic, dynamic> data = snapshot.value;
-    print("data => ${data}");
+  static Future<List<NewsFeedModel>> getNewsFeed(BuildContext context) async {
+    DataSnapshot quickMembersRef =
+        await FirebaseDatabase.instance.reference().child("newsfeed").once();
 
-    List<String> keys = data.keys.toList().cast<String>();
+    Map v = quickMembersRef.value;
 
-    keys.sort((var a, var b) => a.compareTo(b));
+    if (v == null) return [];
 
-    for (String key in keys) {
-      availabilities.add(Availability.fromJson(key, data[key]));
-    }
+    String language = DateDict.of(context).locale.languageCode;
+    List<NewsFeedModel> result = [];
 
-    return availabilities;
+    v.forEach((key, value) {
+      String id = key;
+
+      var content = value[language];
+      String type = value["type"];
+
+      if (content != null) {
+        if (type == "post") {
+          result.add(PostModel.fromJson(id, content));
+        }
+      }
+    });
+
+    return result;
   }
 }

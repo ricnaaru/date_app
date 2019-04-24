@@ -1,30 +1,22 @@
-import 'package:date_app/pages/account.dart';
-import 'package:date_app/pages/community.dart';
 import 'package:date_app/pages/home.dart';
-import 'package:date_app/pages/event.dart';
-import 'package:date_app/utilities/firebase_database_engine.dart';
-import 'package:date_app/utilities/global.dart' as global;
+import 'package:date_app/presenters/home.dart';
+import 'package:date_app/utilities/constants.dart';
 import 'package:date_app/utilities/localization.dart';
-import 'package:date_app/utilities/models.dart';
 import 'package:date_app/utilities/textstyles.dart' as ts;
+import 'package:date_app/view.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:pit_components/components/adv_future_builder.dart';
 import 'package:pit_components/components/adv_loading_with_barrier.dart';
-import 'package:pit_components/components/adv_state.dart';
 
-class DateAppHome extends StatefulWidget {
+class HomeContainerPage extends StatefulWidget {
   @override
-  State<StatefulWidget> createState() => _DateAppHomeState();
+  State<StatefulWidget> createState() => _HomeContainerPageState();
 }
 
-class _DateAppHomeState extends AdvState<DateAppHome> with TickerProviderStateMixin {
-  GlobalKey _globalKey = new GlobalKey(debugLabel: 'btm_app_bar');
-  GlobalKey<EventPageState> _eventKey = new GlobalKey<EventPageState>();
+class _HomeContainerPageState extends View<HomeContainerPage>
+    with TickerProviderStateMixin
+    implements HomeInterface {
+  HomePresenter _presenter;
   List<Widget> _children;
-  List<Member> _members;
-  List<Birthday> _birthdays;
-  List<Holiday> _holidays;
   int _currentIndex = 0;
   AnimationController _fabAnimation;
 
@@ -32,38 +24,40 @@ class _DateAppHomeState extends AdvState<DateAppHome> with TickerProviderStateMi
   void initStateWithContext(BuildContext context) {
     super.initStateWithContext(context);
 
+    _presenter = HomePresenter(context, this, interface: this);
     _fabAnimation = AnimationController(duration: Duration(milliseconds: 300), vsync: this);
   }
 
   @override
-  Widget advBuild(BuildContext context) {
+  Widget buildView(BuildContext context) {
     DateDict dict = DateDict.of(context);
 
     _children = [
-      HomePage(),
-      EventPage(key: _eventKey, events: [], birthday: _birthdays, holiday: _holidays,),
-      CommunityPage(members: _members),
-      AccountPage(),
+      HomePage(_presenter),
+      Center(child: Text("Event")),
     ];
 
     Function bottomNavigatorGenerator = (IconData icon, String title) {
       return BottomNavigationBarItem(
-        icon: Container(height: 20.0, width: 20.0, margin: EdgeInsets.only(bottom: 3.0), child: Icon(icon, color: Colors.grey)),
+        icon: Container(
+            height: 20.0,
+            width: 20.0,
+            margin: EdgeInsets.only(bottom: 3.0),
+            child: Icon(icon, color: Colors.grey)),
         title: Text(title, style: ts.p4),
         activeIcon: Container(
-            height: 20.0, width: 20.0, margin: EdgeInsets.only(bottom: 3.0), child: Icon(icon, color: global.systemPrimaryColor)),
+            height: 20.0,
+            width: 20.0,
+            margin: EdgeInsets.only(bottom: 3.0),
+            child: Icon(icon, color: CompanyColors.primary)),
       );
     };
 
     return Scaffold(
-      body: new AdvFutureBuilder(
-        widgetBuilder: (BuildContext context) {
-          return AdvLoadingWithBarrier(content: _children[_currentIndex], isProcessing: _members == null);
-        },
-        futureExecutor: _loadAll,
-      ), // new
+      body: SafeArea(
+          child: AdvLoadingWithBarrier(
+              content: _children[_currentIndex], isProcessing: isProcessing())), // new
       bottomNavigationBar: BottomNavigationBar(
-        key: _globalKey,
         type: BottomNavigationBarType.fixed,
         onTap: _onTabTapped,
         // new
@@ -72,32 +66,19 @@ class _DateAppHomeState extends AdvState<DateAppHome> with TickerProviderStateMi
         items: [
           bottomNavigatorGenerator(Icons.home, dict.getString("home")),
           bottomNavigatorGenerator(Icons.event, dict.getString("event")),
-          bottomNavigatorGenerator(Icons.people, dict.getString("community")),
-          bottomNavigatorGenerator(Icons.person, dict.getString("account")),
         ],
       ),
       floatingActionButton: ScaleTransition(
         scale: _fabAnimation,
         child: FloatingActionButton(
-          onPressed: () {
-            _eventKey.currentState?.onFabTapped();
-          },
+          onPressed: () {},
           child: Icon(Icons.event_note),
         ),
       ),
     );
   }
 
-  Future<bool> _loadAll(BuildContext context) async {
-    _members = await DataEngine.getMember();
-    _birthdays = await DataEngine.getBirthday();
-    _holidays = await DataEngine.getHoliday();
-
-    return true;
-  }
-
   void _onTabTapped(int index) {
-    print("tab tapped");
     if (index == 1)
       _fabAnimation.forward();
     else
@@ -106,5 +87,10 @@ class _DateAppHomeState extends AdvState<DateAppHome> with TickerProviderStateMi
     setState(() {
       _currentIndex = index;
     });
+  }
+
+  @override
+  void onDataRefreshed() {
+    setState(() {});
   }
 }
