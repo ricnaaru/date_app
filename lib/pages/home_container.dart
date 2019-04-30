@@ -1,3 +1,4 @@
+import 'package:date_app/pages/event.dart';
 import 'package:date_app/pages/home.dart';
 import 'package:date_app/presenters/home.dart';
 import 'package:date_app/utilities/constants.dart';
@@ -34,7 +35,7 @@ class _HomeContainerPageState extends View<HomeContainerPage>
 
     _children = [
       HomePage(_presenter),
-      Center(child: Text("Event")),
+      EventPage(events: [],),
     ];
 
     Function bottomNavigatorGenerator = (IconData icon, String title) {

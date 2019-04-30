@@ -1,6 +1,8 @@
 import 'package:date_app/utilities/constants.dart';
+import 'package:flutter/material.dart';
 
 class MemberModel {
+  final String id;
   final String name;
   final DateTime birthday;
   final bool showBirthday;
@@ -18,6 +20,7 @@ class MemberModel {
   final String password;
 
   MemberModel({
+    this.id,
     this.name,
     this.birthday,
     this.showBirthday,
@@ -142,7 +145,6 @@ abstract class NewsFeedModel {
   String get id => _id;
 
   NewsFeedType get type => _type;
-
 }
 
 class PostModel extends NewsFeedModel {
@@ -185,5 +187,113 @@ class PostModel extends NewsFeedModel {
         "description: $description\n"
         "actionName: $actionName\n"
         "goTo: $goTo\n";
+  }
+}
+
+class GroupModel {
+  final String id;
+  final String name;
+  final List<String> membersId;
+
+  GroupModel({this.id, this.name, this.membersId});
+
+  factory GroupModel.fromJson(String id, Map json) {
+    List<String> membersId = [];
+    Map rawMembersId = json['members_id'];
+    rawMembersId.forEach((key, value) {
+      membersId.add(value);
+    });
+
+    return GroupModel(
+      id: id,
+      name: json['name'] as String,
+      membersId: membersId,
+    );
+  }
+
+  @override
+  String toString() {
+    return "Group (id: $id, name: $name, members: $membersId)";
+  }
+}
+
+enum ParticipantType { member, group }
+
+class ParticipantModel {
+  final String id;
+  final String name;
+  final String photo;
+  final ParticipantType type;
+  final String sourceId;
+
+  ParticipantModel({this.id, this.name, this.photo, this.type, this.sourceId});
+
+  @override
+  String toString() {
+    return "ParticipantModel (id: $id, name: $name, type: $type, sourceId: $sourceId)";
+  }
+}
+
+class PositionModel {
+  final String id;
+  final String name;
+  final int qty;
+  final List<String> participantsId;
+
+  PositionModel({this.id, this.name, this.qty, List<String> participantsId})
+      : this.participantsId = participantsId ?? [];
+
+  @override
+  String toString() {
+    return "PositionModel (id: $id, name: $name, qty: $qty, participantsId: $participantsId)";
+  }
+}
+
+enum EventCategory { birthday, holiday, date, jpcc, group, personal }
+enum IntervalType { once, daily, weekly, monthly, annual, custom }
+
+class EventModel {
+  final String id;
+  final String name;
+  final String description;
+  final EventCategory category;
+  final TimeOfDay startTime;
+  final TimeOfDay endTime;
+  final List<String> participantsId;
+  final IntervalType intervalType;
+  final List<String> positionsId;
+  final bool shuffled;
+  final DateTime startDate;
+  final DateTime endDate;
+
+  EventModel({
+    this.id,
+    this.name,
+    this.description,
+    this.category,
+    this.startTime,
+    this.endTime,
+    this.participantsId,
+    this.intervalType,
+    this.positionsId,
+    this.shuffled,
+    this.startDate,
+    this.endDate,
+  });
+
+  @override
+  String toString() {
+    return "EventModel (id: $id, "
+        "name: $name, "
+        "description: $description, "
+        "category: $category, "
+        "startTime: $startTime, "
+        "endTime: $endTime, "
+        "participantsId: $participantsId, "
+        "intervalType: $intervalType, "
+        "positionsId: $positionsId, "
+        "shuffled: $shuffled, "
+        "startDate: $startDate, "
+        "endDate: $endDate)";
   }
 }

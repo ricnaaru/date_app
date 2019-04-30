@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:date_app/models.dart';
 import 'package:date_app/utilities/constants.dart';
 import 'package:date_app/utilities/global.dart';
+import 'package:smart_text/smart_text.dart';
 import 'package:date_app/utilities/textstyles.dart';
 import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_column.dart';
@@ -41,7 +42,7 @@ class PostCard extends StatelessWidget {
                       ]),
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: handleEmoji(model.description),
+                    child: SmartText(model.description, maxLines: 4),
                   ),
                   Align(
                     alignment: Alignment.centerRight,

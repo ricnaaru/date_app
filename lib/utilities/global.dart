@@ -1,14 +1,8 @@
-import 'dart:ui';
-
 import 'package:date_app/components/custom_dialog_input.dart';
-import 'package:date_app/utilities/constants.dart';
 import 'package:date_app/utilities/localization.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pit_components/components/adv_group_check.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'dart:ui' as ui;
 
 final RegExp emojiRegex = RegExp(
     r"(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])");
@@ -179,121 +173,6 @@ List<TextElement> linkify(String text) {
   }
 
   return list;
-}
-
-Widget handleEmoji(String input, {TextStyle style}) {
-  input += "kaosdkaosdkaos";
-  style ??= TextStyle(color: Colors.black, fontSize: 14.0);
-
-  List<TextSpan> textSpans = [];
-
-  List<TextElement> searchedTextSpans = linkify(input);
-
-  for (var x in searchedTextSpans) {
-    String tempInput = x.text;
-
-    if (x.isUrl) {
-      textSpans.add(_buildLinkTextSpan(tempInput));
-      continue;
-    }
-
-    List<TextSpan> tempTextSpans = [];
-    int lastEmojiIndex = 0;
-    int emojiIndex = tempInput.indexOf(emojiRegex);
-
-    while (emojiIndex >= 0) {
-      tempTextSpans
-          .add(TextSpan(text: tempInput.substring(lastEmojiIndex, emojiIndex), style: style));
-
-      String emojis = "";
-
-      for (int i = emojiIndex; i < tempInput.length; i++) {
-        String currentLetter = tempInput.substring(i, i + 1);
-
-        //check for surrogates emoji
-        if (RegExp(r"[\ud800-\udbff]|[\udc00-\udfff]").hasMatch(currentLetter)) {
-          String currentLetter2 =
-              i == tempInput.length - 1 ? "" : tempInput.substring(i + 1, i + 2);
-          if (RegExp(r"[\ud800-\udbff]|[\udc00-\udfff]").hasMatch(currentLetter2)) {
-            emojis = "$emojis$currentLetter$currentLetter2";
-            i++;
-          }
-        } else {
-          if (!emojiRegex.hasMatch(currentLetter)) {
-            lastEmojiIndex = i;
-            emojiIndex = i;
-            break;
-          } else {
-            emojis = "$emojis${tempInput.substring(i, i + 1)}";
-          }
-        }
-      }
-
-      tempTextSpans
-          .add(TextSpan(text: emojis, style: style.copyWith(fontSize: style.fontSize * 0.85)));
-
-      emojiIndex = tempInput.indexOf(emojiRegex, emojiIndex);
-    }
-
-    tempTextSpans
-        .add(TextSpan(text: tempInput.substring(lastEmojiIndex, tempInput.length), style: style));
-
-    textSpans.addAll(tempTextSpans);
-  }
-
-  return LayoutBuilder(
-    builder: (BuildContext context, BoxConstraints constraints) {
-      bool f = true;
-      int max = f ? 8 : null;
-      var tx = TextPainter(
-          text: TextSpan(children: textSpans), maxLines: max, textDirection: ui.TextDirection.ltr);
-
-      tx.layout(maxWidth: constraints.maxWidth);
-
-      if (tx.didExceedMaxLines) {
-        print("exceed!");
-      }
-
-      return Stack(children: [
-        Container(
-          height: tx.height,
-          child: RichText(
-            text: TextSpan(children: textSpans),
-            maxLines: max,
-          ),
-        ),
-        Positioned(
-            child: Container(
-                child: RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(text: "\u2026 ", style: style),
-                      TextSpan(
-                          text: "Read more",
-                          style: kHyperlinkStyle,
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () {
-                              f = !f;
-                            })
-                    ],
-                  ),
-                ),
-                color: Colors.white),
-            bottom: 0.0,
-            right: 0.0)
-      ]);
-    },
-  );
-}
-
-TextSpan _buildLinkTextSpan(String text) {
-  return TextSpan(
-      text: text,
-      style: kHyperlinkStyle,
-      recognizer: TapGestureRecognizer()
-        ..onTap = () {
-          launch(text);
-        });
 }
 
 dynamic pickFromDialogChooser(BuildContext context,
