@@ -1,10 +1,7 @@
 import 'package:date_app/models.dart';
 import 'package:date_app/presenter.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:pit_components/components/adv_group_check.dart';
-import 'package:pit_components/components/controllers/adv_chooser_controller.dart';
+import 'package:flutter/material.dart';
 import 'package:pit_components/components/controllers/adv_date_picker_controller.dart';
-import 'package:pit_components/components/controllers/adv_increment_controller.dart';
 import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 
 class InputJobPresenter extends Presenter {
@@ -49,7 +46,6 @@ class InputJobPresenter extends Presenter {
   }
 
   void onSinceDateChanged(List<DateTime> value) {
-    if (value != null && value.length > 0)
-    _sinceCtrl.initialValue = value.first;
+    if (value != null && value.length > 0) _sinceCtrl.initialValue = value.first;
   }
 }

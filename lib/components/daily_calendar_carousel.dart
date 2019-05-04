@@ -82,12 +82,11 @@ class CalendarStyle {
 
 class DailyCalendarCarousel extends StatefulWidget {
   final DateTime selectedDateTime;
-  final Function(DateTime) onDayPressed;
   final CalendarStyle calendarStyle;
   final DateTime minDateTime;
   final DateTime maxDateTime;
   final CheckMarkedCallback checkMarkedCallback;
-  final GetEventCallback getEventCallback;
+  final GetEventCallback onDayPressed;
 
   DailyCalendarCarousel({
     Key key,
@@ -100,7 +99,6 @@ class DailyCalendarCarousel extends StatefulWidget {
     Color dayButtonColor = Colors.transparent,
     this.selectedDateTime,
     bool daysHaveCircularBorder,
-    this.onDayPressed,
     Color iconColor = Colors.blueAccent,
     EdgeInsets headerMargin = const EdgeInsets.symmetric(vertical: 16.0),
     double childAspectRatio = 1.0,
@@ -108,7 +106,7 @@ class DailyCalendarCarousel extends StatefulWidget {
     this.minDateTime,
     this.maxDateTime,
     this.checkMarkedCallback,
-    this.getEventCallback,
+    this.onDayPressed,
   })  : this.calendarStyle = CalendarStyle(
           weekDays: weekDays,
           viewportFraction: viewportFraction,
@@ -168,7 +166,7 @@ class DailyCalendarCarouselState extends State<DailyCalendarCarousel>
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
         checkMarkedCallback: widget.checkMarkedCallback,
-        getEventCallback: widget.getEventCallback,
+        onDayPressed: widget.onDayPressed,
       ),
       MonthCalendar(
         mainContext: context,
@@ -179,11 +177,10 @@ class DailyCalendarCarouselState extends State<DailyCalendarCarousel>
         dayMonthAnim: _dayMonthAnim,
         monthYearAnim: _monthYearAnim,
         selectedDateTime: _selectedDateTime,
-        onDayPressed: widget.onDayPressed,
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
         checkMarkedCallback: widget.checkMarkedCallback,
-        getEventCallback: widget.getEventCallback,
+        onDayPressed: widget.onDayPressed,
       ),
       DayCalendar(
         mainContext: context,
@@ -192,19 +189,14 @@ class DailyCalendarCarouselState extends State<DailyCalendarCarousel>
         calendarStyle: widget.calendarStyle,
         dayMonthAnim: _dayMonthAnim,
         selectedDateTime: _selectedDateTime,
-        onDayPressed: widget.onDayPressed,
         minDateTime: widget.minDateTime,
         maxDateTime: widget.maxDateTime,
         checkMarkedCallback: widget.checkMarkedCallback,
-        getEventCallback: widget.getEventCallback,
+        onDayPressed: widget.onDayPressed,
       ),
     ];
 
     return Stack(children: children);
-  }
-
-  void onFabTapped() {
-    _dayKey.currentState.onFabTapped();
   }
 }
 
@@ -214,11 +206,10 @@ class DayCalendar extends StatefulWidget {
   final AnimationController dayMonthAnim;
   final CalendarStyle calendarStyle;
   final DateTime selectedDateTime;
-  final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
   final DateTime maxDateTime;
   final CheckMarkedCallback checkMarkedCallback;
-  final GetEventCallback getEventCallback;
+  final GetEventCallback onDayPressed;
 
   DayCalendar({
     this.mainContext,
@@ -227,11 +218,10 @@ class DayCalendar extends StatefulWidget {
     this.dayMonthAnim,
     this.calendarStyle,
     this.selectedDateTime,
-    this.onDayPressed,
     this.minDateTime,
     this.maxDateTime,
     this.checkMarkedCallback,
-    this.getEventCallback,
+    this.onDayPressed,
   }) : super(key: key);
 
   @override
@@ -448,9 +438,9 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
 
     if (_selectedDateTime.difference(startDate) >= Duration.zero &&
         _selectedDateTime.difference(endDate) <= Duration.zero) {
-      if (selectedDateEvents == null && _selectedDateTime != null && widget.onDayPressed != null) {
-        if (widget.getEventCallback != null) {
-          List<EventModel> newEvents = widget.getEventCallback(_selectedDateTime);
+      if (selectedDateEvents == null && _selectedDateTime != null) {
+        if (widget.onDayPressed != null) {
+          List<EventModel> newEvents = widget.onDayPressed(_selectedDateTime);
 
           selectedDateEvents?.clear();
           selectedDateEvents = newEvents;
@@ -734,8 +724,8 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
     if (widget.dayMonthAnim.value != 0.0) return;
 
     _selectedDateTime = currentDate;
-    if (widget.getEventCallback != null && widget.onDayPressed != null) {
-      List<EventModel> newEvents = widget.getEventCallback(currentDate);
+    if (widget.onDayPressed != null) {
+      List<EventModel> newEvents = widget.onDayPressed(currentDate);
 
       selectedDateEvents?.clear();
       selectedDateEvents = newEvents;
@@ -860,12 +850,6 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
       this._pageDates = dates;
     });
   }
-
-  void onFabTapped() {
-    if (this.mounted) {
-//      Routing.push(context, EventDetailPage(selectedDateEvents));
-    }
-  }
 }
 
 class MonthCalendar extends StatefulWidget {
@@ -876,11 +860,10 @@ class MonthCalendar extends StatefulWidget {
   final AnimationController monthYearAnim;
   final CalendarStyle calendarStyle;
   final DateTime selectedDateTime;
-  final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
   final DateTime maxDateTime;
   final CheckMarkedCallback checkMarkedCallback;
-  final GetEventCallback getEventCallback;
+  final GetEventCallback onDayPressed;
 
   MonthCalendar({
     this.mainContext,
@@ -891,11 +874,10 @@ class MonthCalendar extends StatefulWidget {
     this.monthYearAnim,
     this.calendarStyle,
     this.selectedDateTime,
-    this.onDayPressed,
     this.minDateTime,
     this.maxDateTime,
     this.checkMarkedCallback,
-    this.getEventCallback,
+    this.onDayPressed,
   }) : super(key: key);
 
   @override
@@ -1360,11 +1342,10 @@ class YearCalendar extends StatefulWidget {
   final AnimationController monthYearAnim;
   final CalendarStyle calendarStyle;
   final DateTime selectedDateTime;
-  final Function(DateTime) onDayPressed;
   final DateTime minDateTime;
   final DateTime maxDateTime;
   final CheckMarkedCallback checkMarkedCallback;
-  final GetEventCallback getEventCallback;
+  final GetEventCallback onDayPressed;
 
   YearCalendar({
     this.mainContext,
@@ -1373,11 +1354,10 @@ class YearCalendar extends StatefulWidget {
     this.monthYearAnim,
     this.calendarStyle,
     this.selectedDateTime,
-    this.onDayPressed,
     this.minDateTime,
     this.maxDateTime,
     this.checkMarkedCallback,
-    this.getEventCallback,
+    this.onDayPressed,
   }) : super(key: key);
 
   @override

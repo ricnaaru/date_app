@@ -31,6 +31,7 @@ dependencies:
   linkify: ^1.0.0
   flutter_linkify: ^2.1.0
   smart_text: ^0.0.1
+  flutter_list_drag_and_drop: ^0.1.6
 
 dev_dependencies:
   flutter_test:

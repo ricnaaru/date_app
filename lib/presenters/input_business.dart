@@ -1,10 +1,7 @@
 import 'package:date_app/models.dart';
 import 'package:date_app/presenter.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:pit_components/components/adv_group_check.dart';
-import 'package:pit_components/components/controllers/adv_chooser_controller.dart';
+import 'package:flutter/material.dart';
 import 'package:pit_components/components/controllers/adv_date_picker_controller.dart';
-import 'package:pit_components/components/controllers/adv_increment_controller.dart';
 import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 
 class InputBusinessPresenter extends Presenter {
@@ -19,7 +16,8 @@ class InputBusinessPresenter extends Presenter {
   @override
   void init() {
     _businessNameCtrl = AdvTextFieldController(label: dict.getString("business_name"), maxLines: 1);
-    _businessDescriptionCtrl = AdvTextFieldController(label: dict.getString("business_description"));
+    _businessDescriptionCtrl =
+        AdvTextFieldController(label: dict.getString("business_description"));
     _businessAddressCtrl = AdvTextFieldController(label: dict.getString("business_address"));
     _openSinceCtrl = AdvDatePickerController(label: dict.getString("open_since"));
   }
@@ -44,7 +42,6 @@ class InputBusinessPresenter extends Presenter {
   AdvDatePickerController get openSinceCtrl => _openSinceCtrl;
 
   void onOpenDateChanged(List<DateTime> value) {
-    if (value != null && value.length > 0)
-    _openSinceCtrl.initialValue = value.first;
+    if (value != null && value.length > 0) _openSinceCtrl.initialValue = value.first;
   }
 }

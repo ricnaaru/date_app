@@ -98,10 +98,10 @@ class _NemobAppState extends State<NemobApp> {
                 brightness: Brightness.light,
                 primarySwatch: CompanyColors.primary,
                 primaryColor: CompanyColors.primary[500],
-                primaryColorBrightness: Brightness.light,
+                primaryColorBrightness: Brightness.dark,
                 accentColor: CompanyColors.accent[500],
                 accentColorBrightness: Brightness.light,
-                scaffoldBackgroundColor: Colors.white),
+                scaffoldBackgroundColor: Color.lerp(CompanyColors.accent[50], Colors.white, 0.8)),
             home: _widget,
           );
         } else {

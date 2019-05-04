@@ -59,12 +59,6 @@ class RegisterPresenter extends Presenter {
   AdvTextFieldController _usernameCtrl;
   AdvTextFieldController _passwordCtrl;
 
-  View _additionalView;
-
-  set additionalView(View value) {
-    _additionalView = value;
-  }
-
   RegisterPresenter(BuildContext context, View<StatefulWidget> view, {RegisterInterface interface})
       : this._interface = interface,
         super(context, view);
@@ -172,6 +166,14 @@ class RegisterPresenter extends Presenter {
       this._interface.onPageCompleted(this._sequenceController.selectedIndex);
 
       if (this._sequenceController.selectedIndex >= 4) {
+        List<String> classHistory = [];
+
+        classes.forEach((key, value) {
+          if (value) {
+           classHistory.add(key);
+          }
+        });
+
         MemberModel member = MemberModel(
           name: _nameCtrl.text ?? "",
           birthday: _dateOfBirthCtrl.dates.length == 0 ? null : _dateOfBirthCtrl.dates.first,
@@ -186,7 +188,7 @@ class RegisterPresenter extends Presenter {
           dateOfBaptize: _baptismDateCtrl.dates.length == 0 ? null : _baptismDateCtrl.dates.first,
           joinJpccSince:
               _joinJpccSinceCtrl.dates.length == 0 ? null : _joinJpccSinceCtrl.dates.first,
-          classHistory: classes,
+          classHistory: classHistory,
           username: _usernameCtrl.text ?? "",
           password: _passwordCtrl.text ?? "",
         );

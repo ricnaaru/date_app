@@ -25,7 +25,6 @@ class _RegisterAdditionalPageState extends View<RegisterAdditionalPage> {
   @override
   void initState() {
     _presenter = widget.presenter;
-    _presenter.additionalView = this;
     super.initState();
   }
 

@@ -37,4 +37,10 @@ abstract class View<T extends StatefulWidget> extends State<T> {
       });
     }
   }
+
+  void refresh() {
+    setState(() {
+
+    });
+  }
 }

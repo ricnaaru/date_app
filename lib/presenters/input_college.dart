@@ -1,6 +1,6 @@
 import 'package:date_app/models.dart';
 import 'package:date_app/presenter.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_group_check.dart';
 import 'package:pit_components/components/controllers/adv_chooser_controller.dart';
 import 'package:pit_components/components/controllers/adv_date_picker_controller.dart';

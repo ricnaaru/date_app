@@ -1,6 +1,6 @@
 import 'package:date_app/components/post_card.dart';
 import 'package:date_app/models.dart';
-import 'package:date_app/presenters/home.dart';
+import 'package:date_app/presenters/home_presenter.dart';
 import 'package:date_app/utilities/firebase_database_engine.dart';
 import 'package:date_app/utilities/localization.dart';
 import 'package:date_app/view.dart';
@@ -36,6 +36,7 @@ class _HomePageState extends View<HomePage> {
     return Refresher(
           onRefresh: () async {
             await _presenter.refreshFeed();
+            await _presenter.refreshEvents();
           },
           child: AdvColumn(
               onlyInner: false,
