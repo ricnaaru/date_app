@@ -22,13 +22,8 @@ class DateDict {
         'married': 'Menikah',
         'single': 'Lajang'
       },
-      "academic_degree": {
-        'd': 'Diploma',
-        's1': 'Sarjana',
-        's2': 'Magister',
-        's3': 'Doktor'
-      },
-      "event_period": {
+      "academic_degree": {'d': 'Diploma', 's1': 'Sarjana', 's2': 'Magister', 's3': 'Doktor'},
+      "interval_type": {
         'once': 'Sekali',
         'daily': 'Harian',
         'weekly': 'Mingguan',
@@ -53,13 +48,8 @@ class DateDict {
         'married': 'Married',
         'single': 'Single'
       },
-      "academic_degree": {
-        'd': 'Diploma',
-        's1': 'Bachelor',
-        's2': 'Magister',
-        's3': 'Doctorate'
-      },
-      "event_period": {
+      "academic_degree": {'d': 'Diploma', 's1': 'Bachelor', 's2': 'Magister', 's3': 'Doctorate'},
+      "interval_type": {
         'once': 'Once',
         'daily': 'Daily',
         'weekly': 'Weekly',
@@ -149,6 +139,8 @@ class DateDict {
       'err_password_not_match': "ID dan Password tidak ditemukan",
       'event': "Acara",
       'event_detail': "Detil Acara",
+      'event_setting': "Pengaturan Acara",
+      'event_added': "Event telah ditambahkan",
       'from': "Dari",
       'generate': "Generate",
       'generate_participant_schedule_method': "Metode generate jadwal peserta",
@@ -163,7 +155,7 @@ class DateDict {
       'independence_day': "Hari Kemerdekaan Republik Indonesia",
       'input_description': "Tulis deskripsi",
       'input_name': "Tulis nama",
-      'event_period': "Tipe interval",
+      'interval_type': "Tipe interval",
       'islamic_new_year': "Tahun Baru Hijriyah",
       'isra_miraj': "Isra Mi'raj",
       'i_have_been_baptized': "Saya telah dibaptis",
@@ -224,6 +216,12 @@ class DateDict {
       'working_since': "Bekerja sejak",
       'login': "Login",
       'register': "Daftar",
+      'err_duration_and_interval_overlap':
+          "Total durasi hari event tidak boleh lebih besar dari jarak antar event",
+      'err_last_generate_before_start': "Tanggal Akhir Generate harus setelah Tanggal Mulai",
+      'last_generate_date': "Tanggal Akhir Generate",
+      'edit': "Ubah",
+      'delete': "Hapus",
     },
     'en': {
       'account': "Account",
@@ -294,7 +292,9 @@ class DateDict {
       'input_description': "Input description",
       'input_location': "Input location (Optional)",
       'input_name': "Input name",
-      'event_period': "Interval type",
+      'interval_type': "Interval type",
+      'event_setting': "Event Setting",
+      'event_added': "Event added",
       'islamic_new_year': "Islamic New Year",
       'isra_miraj': "Isra and Mi'raj",
       'i_have_been_baptized': "I have been baptized",
@@ -359,8 +359,29 @@ class DateDict {
       'err_username_empty': "Please fill username!",
       'err_password_empty': "Please fill password!",
       'err_password_not_match': "ID and Password not found",
+      'err_duration_and_interval_overlap':
+          "Total days of the event may not more than the gap days between events",
+      'err_last_generate_before_start': "Last Generate Date must be after Start Date",
+      'last_generate_date': "Last Generate Date",
+      'edit': "Edit",
+      'delete': "Delete",
     },
   };
+
+  String positionNeeded(int qty) {
+    if (locale.languageCode == "en") {
+      return Intl.plural(
+          qty,
+          one: '$qty person needed',
+          other: '$qty persons needed',
+          name: "positionNeeded",
+          args: [qty],);
+    } else if (locale.languageCode == "id") {
+      return "Dibutuhkan $qty orang";
+    } else {
+      return "Raw position_needed";
+    }
+  }
 
   String getString(String value) {
     Map<String, String> localizedValue =

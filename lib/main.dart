@@ -77,7 +77,7 @@ class _NemobAppState extends State<NemobApp> {
       futureExecutor: getPrefs,
       widgetBuilder: (BuildContext context) {
         if (prefs != null) {
-          final String localeString = (prefs.getString(prefKeys.kLocale) ?? "id");
+          final String localeString = (prefs.getString(prefKeys.kLocale) ?? "en");
           final String userId = (prefs.getString(prefKeys.kUserId) ?? "");
           print("userId => $userId");
           _locale = Locale(localeString);

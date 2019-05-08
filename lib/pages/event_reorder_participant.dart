@@ -17,7 +17,7 @@ import 'package:pit_components/pit_components.dart';
 //need to refactor efficiently
 class EventReorderParticipantPage extends StatefulWidget {
   final String crowdType;
-  final EventModel event;
+  final EventSettingModel event;
 
   EventReorderParticipantPage({this.crowdType, this.event});
 
@@ -155,13 +155,11 @@ class _EventReorderParticipantPageState extends View<EventReorderParticipantPage
             child: AdvListTile(
               onTap: () {},
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              start: ClipRRect(
-                  borderRadius: BorderRadius.circular(50.0),
-                  child: CachedNetworkImage(
-                      imageUrl: group.members.first.photo,
-                      width: 50.0,
-                      height: 50.0,
-                      fit: BoxFit.cover)),
+              start: PhotoImage(
+                  imageUrl: group.members.first.photo,
+                  width: 50.0,
+                  height: 50.0,
+                  fit: BoxFit.cover),
               expanded: AdvColumn(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(group.name, style: h9),
 //                group.fixedGroup ? Text("Fixed Group", style: p4.copyWith(color: systemDarkerGreyColor)) : null
@@ -203,14 +201,11 @@ class _EventReorderParticipantPageState extends View<EventReorderParticipantPage
         child: AdvListTile(
           onTap: () {},
           padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-          start: ClipRRect(
-            borderRadius: BorderRadius.circular(50.0),
-            child: CachedNetworkImage(
-              imageUrl: widget.event.participants.first.photo,
-              width: 50.0,
-              height: 50.0,
-              fit: BoxFit.cover,
-            ),
+          start: PhotoImage(
+            imageUrl: widget.event.participants.first.photo,
+            width: 50.0,
+            height: 50.0,
+            fit: BoxFit.cover,
           ),
           expanded: Text(widget.event.participants.first.name),
           end: Container(
@@ -249,14 +244,11 @@ class _EventReorderParticipantPageState extends View<EventReorderParticipantPage
             child: AdvListTile(
               onTap: () {},
               padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-              start: ClipRRect(
-                borderRadius: BorderRadius.circular(50.0),
-                child: CachedNetworkImage(
-                  imageUrl: member.photo,
-                  width: 50.0,
-                  height: 50.0,
-                  fit: BoxFit.cover,
-                ),
+              start: PhotoImage(
+                imageUrl: member.photo,
+                width: 50.0,
+                height: 50.0,
+                fit: BoxFit.cover,
               ),
               expanded: Text(member.name),
               end: Container(

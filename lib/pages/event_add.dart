@@ -5,14 +5,16 @@ import 'package:date_app/view.dart';
 import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_button.dart';
 import 'package:pit_components/components/adv_column.dart';
-import 'package:pit_components/components/adv_group_check.dart';
+import 'package:pit_components/components/adv_date_picker.dart';
+import 'package:pit_components/components/adv_increment.dart';
 import 'package:pit_components/components/adv_row.dart';
-import 'package:pit_components/components/adv_state.dart';
 import 'package:pit_components/components/adv_text_field.dart';
-import 'package:pit_components/components/controllers/adv_chooser_controller.dart';
-import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
 
 class EventAddPage extends StatefulWidget {
+  final DateTime date;
+
+  EventAddPage({this.date});
+
   @override
   State<StatefulWidget> createState() => _EventAddPageState();
 }
@@ -24,7 +26,7 @@ class _EventAddPageState extends View<EventAddPage> {
   void initStateWithContext(BuildContext context) {
     super.initStateWithContext(context);
 
-    _presenter = EventAddPresenter(context, this);
+    _presenter = EventAddPresenter(context, this, widget.date);
   }
 
   @override
@@ -40,50 +42,79 @@ class _EventAddPageState extends View<EventAddPage> {
         Expanded(
           child: SingleChildScrollView(
             child: AdvColumn(
-                margin: EdgeInsets.symmetric(horizontal: 8.0).copyWith(top: 16.0, bottom: 8.0),
+                margin: EdgeInsets.all(16.0),
                 crossAxisAlignment: CrossAxisAlignment.start,
                 divider: ColumnDivider(16.0),
                 children: [
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: AdvTextField(controller: _presenter.nameController),
-                  ),
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: AdvTextField(controller: _presenter.descController),
-                  ),
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: AdvTextField(controller: _presenter.locationController),
-                  ),
-                  AdvRow(margin: EdgeInsets.symmetric(horizontal: 8.0), divider: RowDivider(8.0), children: [
-                    Expanded(
-                      child: InkWell(
-                        child: IgnorePointer(
-                          ignoring: true,
-                          child: AdvTextField(controller: _presenter.fromTimeController),
+                  AdvTextField(controller: _presenter.nameController),
+                  AdvTextField(controller: _presenter.descController),
+                  AdvTextField(controller: _presenter.locationController),
+                  AdvRow(
+                    divider: RowDivider(8.0),
+                    children: <Widget>[
+                      Expanded(
+                        child: AdvDatePicker(
+                          selectionType: SelectionType.range,
+                          controller: _presenter.startDateController,
+                          onChanged: (dates) {
+                            _presenter.onDatePicked(dates);
+                          },
                         ),
-                        onTap: () {
-                          _presenter.pickStartTime();
-                        },
                       ),
-                    ),
-                    Expanded(
-                      child: InkWell(
-                        child: IgnorePointer(
-                          ignoring: true,
-                          child: AdvTextField(controller: _presenter.toTimeController),
+                      Expanded(
+                        child: AdvDatePicker(
+                          selectionType: SelectionType.range,
+                          controller: _presenter.endDateController,
+                          onChanged: (dates) {
+                            _presenter.onDatePicked(dates);
+                          },
                         ),
-                        onTap: () {
-                          _presenter.pickEndTime();
-                        },
                       ),
-                    )
-                  ]),
-                  Container(
-                    margin: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: AdvChooserDialog(controller: _presenter.categoryController),
+                    ],
                   ),
+                  AdvRow(
+                      divider: RowDivider(8.0),
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            child: IgnorePointer(
+                              ignoring: true,
+                              child: AdvTextField(controller: _presenter.fromTimeController),
+                            ),
+                            onTap: () {
+                              _presenter.pickStartTime();
+                            },
+                          ),
+                        ),
+                        Expanded(
+                          child: InkWell(
+                            child: IgnorePointer(
+                              ignoring: true,
+                              child: AdvTextField(controller: _presenter.toTimeController),
+                            ),
+                            onTap: () {
+                              _presenter.pickEndTime();
+                            },
+                          ),
+                        )
+                      ]),
+                  AdvChooserDialog(controller: _presenter.categoryController),
+                  AdvChooserDialog(
+                    controller: _presenter.periodController,
+                    itemChangeListener: (context, oldValue, newValue) {
+                      setState(() {});
+                    },
+                  ),
+                  (_presenter.periodController.text == "custom")
+                      ? AdvIncrement(controller: _presenter.daysController)
+                      : null,
+                  (_presenter.periodController.text != "once")
+                      ? AdvDatePicker(
+                    selectionType: SelectionType.single,
+                    controller: _presenter.lastGenerateDateController,
+                    onChanged: _presenter.onLastGenerateDatePicked,
+                  )
+                      : null,
                 ]),
           ),
         ),

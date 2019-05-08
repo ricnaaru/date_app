@@ -1,20 +1,17 @@
 import 'package:date_app/components/adv_floating_button.dart';
-import 'package:date_app/models.dart';
 import 'package:date_app/presenters/event_detail.dart';
 import 'package:date_app/utilities/localization.dart';
-import 'package:date_app/utilities/string_helper.dart';
 import 'package:date_app/utilities/textstyles.dart';
 import 'package:date_app/view.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:pit_components/components/adv_column.dart';
-import 'package:pit_components/components/adv_row.dart';
 
 class EventDetailPage extends StatefulWidget {
   final DateTime date;
-  final List<EventModel> eventItems;
+  final List<Widget> eventWidgets;
 
-  EventDetailPage(this.date, this.eventItems);
+  EventDetailPage(this.date, this.eventWidgets);
 
   @override
   State<StatefulWidget> createState() => _EventDetailPageState();
@@ -26,7 +23,7 @@ class _EventDetailPageState extends View<EventDetailPage> with TickerProviderSta
   @override
   void initStateWithContext(BuildContext context) {
     super.initStateWithContext(context);
-    _presenter = EventDetailPresenter(context, this);
+    _presenter = EventDetailPresenter(context, this, widget.date);
   }
 
   @override
@@ -36,10 +33,8 @@ class _EventDetailPageState extends View<EventDetailPage> with TickerProviderSta
 
     List<Widget> children = [];
 
-    for (int i = 0; i < (widget.eventItems?.length ?? 0); i++) {
-      Widget child = _buildEventCard(dict, widget.eventItems[i]);
-
-      children.add(child);
+    for (int i = 0; i < (widget.eventWidgets?.length ?? 0); i++) {
+      children.add(widget.eventWidgets[i]);
     }
 
     if (children.length == 0) {
@@ -69,47 +64,5 @@ class _EventDetailPageState extends View<EventDetailPage> with TickerProviderSta
         callbacks: [_presenter.handleEventTapped, _presenter.handleChatTapped],
       ),
     );
-  }
-
-  Widget _buildEventCard(DateDict dict, EventModel item) {
-    IconData icon;
-    String text;
-
-    switch (item.category) {
-      case EventCategory.birthday:
-        icon = Icons.cake;
-        text = StringHelper.formatString(dict.getString("s_birthday"), {"{name}": "${item.name}"});
-        break;
-      case EventCategory.holiday:
-        icon = Icons.flag;
-        text = "${dict.getString(item.name)}";
-        break;
-      case EventCategory.date:
-        icon = Icons.group;
-        text = "DATE : ${item.name}";
-        break;
-      case EventCategory.jpcc:
-        icon = Icons.home;
-        text = "JPCC : ${item.name}";
-        break;
-      case EventCategory.group:
-        icon = Icons.group;
-        text = "${dict.getString("group")} : ${item.name}";
-        break;
-      case EventCategory.personal:
-        icon = Icons.person;
-        text = "${dict.getString("personal")} : ${item.name}";
-        break;
-    }
-
-    return Container(
-        width: double.infinity,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.0)),
-        padding: EdgeInsets.all(16.0),
-        margin: EdgeInsets.symmetric(horizontal: 16.0),
-        child: AdvRow(children: [
-          Expanded(child: Material(color: Colors.transparent, child: Text(text))),
-          Icon(icon)
-        ]));
   }
 }

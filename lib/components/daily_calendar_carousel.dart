@@ -1,10 +1,8 @@
-import 'package:date_app/models.dart';
 import 'package:date_app/utilities/constants.dart';
 import 'package:date_app/utilities/localization.dart';
-import 'package:date_app/utilities/string_helper.dart';
+import 'package:date_app/utilities/textstyles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-/// A Calculator.
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:pit_components/components/adv_column.dart';
 import 'package:pit_components/components/adv_row.dart';
@@ -12,10 +10,10 @@ import 'package:pit_components/components/adv_visibility.dart';
 import 'package:pit_components/consts/textstyles.dart' as ts;
 import 'package:pit_components/pit_components.dart';
 import 'package:pit_components/utils/utils.dart';
-/// A Calculator.
-
 
 const int _kAnimationDuration = 300;
+
+enum MarkerType { birthday, holiday, event }
 
 enum PickType {
   day,
@@ -23,8 +21,47 @@ enum PickType {
   year,
 }
 
-typedef CheckMarkedCallback = bool Function(DateTime date, PickType type, {EventCategory category});
-typedef GetEventCallback = List<EventModel> Function(DateTime date);
+typedef CheckMarkedCallback = bool Function(DateTime date, PickType type, {MarkerType markerType});
+typedef GetEventCallback = List<Widget> Function(
+    DateTime date, EventCardGenerator eventCardGenerator);
+typedef EventCardGenerator = Widget Function(String name, MarkerType type, {String description});
+
+Widget _eventCardGenerator(String name, MarkerType type, {String description}) {
+  Icon icon;
+  Color backgroundColor;
+
+  switch (type) {
+    case MarkerType.birthday:
+      backgroundColor = Color.lerp(systemOrangeColor, Colors.white, 0.85);
+      icon = Icon(Icons.cake, color: systemOrangeColor, size: 20.0);
+      break;
+    case MarkerType.holiday:
+      backgroundColor = Color.lerp(systemPurpleColor, Colors.white, 0.85);
+      icon = Icon(Icons.flag, color: systemPurpleColor, size: 20.0);
+      break;
+    case MarkerType.event:
+      backgroundColor = Color.lerp(systemTealColor, Colors.white, 0.85);
+      icon = Icon(Icons.event, color: systemTealColor, size: 20.0);
+      break;
+  }
+
+  return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(color: backgroundColor, borderRadius: BorderRadius.circular(4.0)),
+      padding: EdgeInsets.all(16.0),
+      margin: EdgeInsets.symmetric(horizontal: 16.0),
+      child: AdvRow(children: [
+        Expanded(
+            child: Material(
+          child: AdvColumn(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(name, style: h9, maxLines: 1),
+            description == null ? null : Text(description, maxLines: 1),
+          ]),
+          color: Colors.transparent, //material untuk animasi hero
+        )),
+        icon
+      ]));
+}
 
 class CalendarStyle {
   final TextStyle defaultHeaderTextStyle =
@@ -264,7 +301,7 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
   Tween<Rect> rectTween;
 
   AnimationController _listAnimation;
-  List<EventModel> selectedDateEvents;
+  List<Widget> eventWidgets;
 
   @override
   initState() {
@@ -290,7 +327,7 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
     _listAnimation = AnimationController(duration: Duration(milliseconds: 500), vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (selectedDateEvents != null) _listAnimation.forward();
+      if (eventWidgets != null) _listAnimation.forward();
     });
   }
 
@@ -438,18 +475,18 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
 
     if (_selectedDateTime.difference(startDate) >= Duration.zero &&
         _selectedDateTime.difference(endDate) <= Duration.zero) {
-      if (selectedDateEvents == null && _selectedDateTime != null) {
+      if (eventWidgets == null && _selectedDateTime != null) {
         if (widget.onDayPressed != null) {
-          List<EventModel> newEvents = widget.onDayPressed(_selectedDateTime);
+          List<Widget> newEvents = widget.onDayPressed(_selectedDateTime, _eventCardGenerator);
 
-          selectedDateEvents?.clear();
-          selectedDateEvents = newEvents;
+          eventWidgets?.clear();
+          eventWidgets = newEvents;
         }
       }
 
-      int totalPortion = (selectedDateEvents?.length ?? 1).clamp(1, 5);
+      int totalPortion = (eventWidgets?.length ?? 1).clamp(1, 5);
 
-      for (int i = 0; i < (selectedDateEvents?.length ?? 0); i++) {
+      for (int i = 0; i < (eventWidgets?.length ?? 0); i++) {
         double beginPortion = (i * (1.0 / totalPortion)).clamp(0.0, 0.8);
         double endPortion = ((i + 1) * (1.0 / totalPortion)).clamp(0.0, 1.0);
 
@@ -475,7 +512,7 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
                   ),
                 ),
               ),
-              child: _buildEventCard(dict, selectedDateEvents[i]),
+              child: eventWidgets[i],
             ));
 
         children.add(widget);
@@ -610,48 +647,6 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
     );
   }
 
-  Widget _buildEventCard(DateDict dict, EventModel item) {
-    IconData icon;
-    String text;
-
-    switch (item.category) {
-      case EventCategory.birthday:
-        icon = Icons.cake;
-        text = StringHelper.formatString(dict.getString("s_birthday"), {"{name}": "${item.name}"});
-        break;
-      case EventCategory.holiday:
-        icon = Icons.flag;
-        text = "${dict.getString(item.name)}";
-        break;
-      case EventCategory.date:
-        icon = Icons.group;
-        text = "DATE : ${item.name}";
-        break;
-      case EventCategory.jpcc:
-        icon = Icons.home;
-        text = "JPCC : ${item.name}";
-        break;
-      case EventCategory.group:
-        icon = Icons.group;
-        text = "${dict.getString("group")} : ${item.name}";
-        break;
-      case EventCategory.personal:
-        icon = Icons.person;
-        text = "${dict.getString("personal")} : ${item.name}";
-        break;
-    }
-
-    return Container(
-        width: double.infinity,
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(4.0)),
-        padding: EdgeInsets.all(16.0),
-        margin: EdgeInsets.symmetric(horizontal: 16.0),
-        child: AdvRow(children: [
-          Expanded(child: Material(color: Colors.transparent, child: Text(text))),
-          Icon(icon)
-        ]));
-  }
-
   List<Widget> _renderWeekDays() {
     List<Widget> list = [];
     for (var weekDay in widget.calendarStyle.weekDays) {
@@ -672,7 +667,7 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
   }
 
   /// draw a little dot inside the each boxes (only if it's one of the
-  /// [widget.selectedDateEvents] and slightly below day text
+  /// [widget.eventWidgets] and slightly below day text
   Widget _renderMarked(DateTime now, {bool isSelected, bool isAvailable}) {
     final Icon defaultHolidayWidget = Icon(Icons.flag,
         color: isSelected || !isAvailable ? Colors.white : systemPurpleColor, size: 10.0);
@@ -683,18 +678,15 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
 
     List<Widget> children = [];
 
-    if (widget.checkMarkedCallback(now, PickType.day, category: EventCategory.birthday)) {
+    if (widget.checkMarkedCallback(now, PickType.day, markerType: MarkerType.birthday)) {
       children.add(defaultBirthdayWidget);
     }
 
-    if (widget.checkMarkedCallback(now, PickType.day, category: EventCategory.holiday)) {
+    if (widget.checkMarkedCallback(now, PickType.day, markerType: MarkerType.holiday)) {
       children.add(defaultHolidayWidget);
     }
 
-    if (widget.checkMarkedCallback(now, PickType.day, category: EventCategory.date) ||
-        widget.checkMarkedCallback(now, PickType.day, category: EventCategory.group) ||
-        widget.checkMarkedCallback(now, PickType.day, category: EventCategory.jpcc) ||
-        widget.checkMarkedCallback(now, PickType.day, category: EventCategory.personal)) {
+    if (widget.checkMarkedCallback(now, PickType.day, markerType: MarkerType.event)) {
       children.add(defaultEventWidget);
     }
 
@@ -725,10 +717,10 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
 
     _selectedDateTime = currentDate;
     if (widget.onDayPressed != null) {
-      List<EventModel> newEvents = widget.onDayPressed(currentDate);
+      List<Widget> newEvents = widget.onDayPressed(currentDate, _eventCardGenerator);
 
-      selectedDateEvents?.clear();
-      selectedDateEvents = newEvents;
+      eventWidgets?.clear();
+      eventWidgets = newEvents;
     }
 
     setState(() {
@@ -813,7 +805,7 @@ class DayCalendarState extends State<DayCalendar> with TickerProviderStateMixin 
         this._pageDates = dates;
         if (!(_selectedDateTime.difference(startDate) >= Duration.zero &&
             _selectedDateTime.difference(endDate) <= Duration.zero)) {
-          selectedDateEvents = null;
+          eventWidgets = null;
         }
       });
     }

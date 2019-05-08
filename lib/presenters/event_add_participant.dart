@@ -18,9 +18,9 @@ class EventAddParticipantPresenter extends Presenter {
   List<GroupModel> _selectedGroups = [];
   String _crowdType = "personal";
   bool _errorNoParticipantSelected = false;
-  EventModel _event;
+  EventSettingModel _event;
 
-  EventAddParticipantPresenter(BuildContext context, View<StatefulWidget> view, {EventModel event})
+  EventAddParticipantPresenter(BuildContext context, View<StatefulWidget> view, {EventSettingModel event})
       : this._event = event,
         super(context, view);
 

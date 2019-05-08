@@ -20,7 +20,7 @@ import 'package:pit_components/pit_components.dart';
 
 //need to refactor efficiently
 class EventAddParticipantPage extends StatefulWidget {
-  final EventModel event;
+  final EventSettingModel event;
 
   EventAddParticipantPage({this.event});
 

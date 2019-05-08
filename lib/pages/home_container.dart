@@ -1,8 +1,8 @@
+import 'package:date_app/application.dart';
 import 'package:date_app/pages/event.dart';
 import 'package:date_app/pages/home.dart';
-import 'package:date_app/presenters/home_presenter.dart';
+import 'package:date_app/presenters/home_container.dart';
 import 'package:date_app/utilities/constants.dart';
-import 'package:date_app/utilities/firebase_database_engine.dart';
 import 'package:date_app/utilities/localization.dart';
 import 'package:date_app/utilities/textstyles.dart' as ts;
 import 'package:date_app/view.dart';
@@ -25,8 +25,9 @@ class _HomeContainerPageState extends View<HomeContainerPage>
   void initStateWithContext(BuildContext context) {
     super.initStateWithContext(context);
 
-    _presenter = HomePresenter(context, this, homeInterface: this);
+    _presenter = HomePresenter(context, this);
     _fabAnimation = AnimationController(duration: Duration(milliseconds: 300), vsync: this);
+    application.homeInterface = this;
   }
 
   @override
@@ -62,7 +63,8 @@ class _HomeContainerPageState extends View<HomeContainerPage>
       child: Scaffold(
         body: SafeArea(
             child: AdvLoadingWithBarrier(
-                content: _children[_presenter.currentIndex], isProcessing: isProcessing())), // new
+                content: _children[_presenter.currentIndex],
+                isProcessing: _presenter.newsFeed == null || _presenter.holidays == null || _presenter.events == null)), // new
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           onTap: _onTabTapped,
@@ -101,6 +103,12 @@ class _HomeContainerPageState extends View<HomeContainerPage>
   @override
   void onDataRefreshed() {
     setState(() {});
+  }
+
+  @override
+  void resetEvents() {
+    print("resetEvents");
+    _presenter.refreshEvents();
   }
 }
 

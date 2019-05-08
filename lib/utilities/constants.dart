@@ -3,8 +3,6 @@ import 'package:intl/intl.dart';
 
 /// etc..
 
-DateFormat kServerDateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
-
 /// SharedPreferences Key
 
 const String kLocaleDefault = "en";

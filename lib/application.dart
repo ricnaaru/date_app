@@ -1,9 +1,11 @@
 import 'dart:ui';
 
+import 'package:date_app/presenters/home_container.dart';
 import 'package:flutter/material.dart';
 
 class Application {
   static final Application _application = Application._internal();
+  HomeInterface homeInterface;
 
   factory Application() {
     return _application;

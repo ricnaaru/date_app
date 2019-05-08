@@ -8,98 +8,120 @@ import 'package:flutter/material.dart';
 
 class EventPresenter extends Presenter {
   DateTime lastDate = DateTime.now();
-  List<EventModel> lastEvents = [];
+  List<Widget> lastEventWidgets = [];
+  List<EventModel> events;
+  List<BirthdayModel> birthdays;
+  List<HolidayModel> holidays;
 
   EventPresenter(BuildContext context, View<StatefulWidget> view) : super(context, view);
 
   @override
-  void init() {
-  }
+  void init() {}
 
-  bool checkMarkedDate(List<EventModel> events, DateTime date, PickType type,
-      {EventCategory category}) {
-    if (events == null) return false;
+  bool checkMarkedDate(DateTime date, PickType type, {MarkerType markerType}) {
+    if (markerType == MarkerType.birthday) {
+      if (birthdays == null) return false;
 
-    if (category == EventCategory.birthday) {
-      if (events
-              .where((EventModel event) =>
-                  event.category == EventCategory.birthday &&
-                  DateTime(date.year, event.startDate.month, event.startDate.day) == date)
+      if (birthdays
+              .where((BirthdayModel birthday) =>
+                  DateTime(date.year, birthday.date.month, birthday.date.day) == date)
               .length >
           0) return true;
     }
 
-    if (category == EventCategory.holiday) {
-      return events.where((EventModel event) {
-            DateTime startDate = event.startDate;
-            DateTime endDate = event.endDate;
+    if (markerType == MarkerType.event) {
+      if (events == null) return false;
 
-            if (event.category != EventCategory.holiday) return false;
+      if (events
+              .where((EventModel event) =>
+                  date.compareTo(event.startDate) >= 0 && date.compareTo(event.endDate) <= 0)
+              .length >
+          0) return true;
+    }
 
-            if (event.interval == IntervalType.once) {
-              if (endDate == null) {
-                return date.compareTo(startDate) == 0;
-              } else {
-                return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
-              }
-            } else if (event.interval == IntervalType.annual) {
-              startDate = DateTime(date.year, startDate.month, startDate.day);
+    if (markerType == MarkerType.holiday) {
+      if (holidays == null) return false;
 
-              if (endDate == null) {
-                return date.compareTo(startDate) == 0;
-              } else {
-                endDate = DateTime(date.year, endDate.month, endDate.day);
+      List<HolidayModel> xo = holidays.where((HolidayModel holiday) {
+        DateTime startDate = holiday.startDate;
+        DateTime endDate = holiday.endDate;
 
-                return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
-              }
-            }
-          }).length >
-          0;
+        if (holiday.interval == HolidayIntervalType.once) {
+          if (endDate == null) {
+            return date.compareTo(startDate) == 0;
+          } else {
+            return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
+          }
+        } else if (holiday.interval == HolidayIntervalType.annual) {
+          startDate = DateTime(date.year, startDate.month, startDate.day);
+
+          if (endDate == null) {
+            return date.compareTo(startDate) == 0;
+          } else {
+            endDate = DateTime(date.year, endDate.month, endDate.day);
+
+            return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
+          }
+        }
+      }).toList();
+
+      return xo.length > 0;
     }
 
     return false;
   }
 
   void onFabTapped() {
-    Routing.push(context, EventDetailPage(lastDate, lastEvents));
+    Routing.push(context, EventDetailPage(lastDate, lastEventWidgets));
   }
 
-  List<EventModel> onDayPressed(List<EventModel> events, DateTime date) {
-    List<EventModel> result = [];
+  List<Widget> onDayPressed(DateTime date, EventCardGenerator eventCardGenerator) {
+    List<Widget> result = [];
 
-    if (events == null) return [];
+    if (birthdays != null)
+      result.addAll(birthdays
+          .where((BirthdayModel birthday) =>
+              DateTime(date.year, birthday.date.month, birthday.date.day) == date)
+          .map((birthday) {
+        return eventCardGenerator(birthday.name, MarkerType.birthday);
+      }));
 
-    result.addAll(events
-        .where((EventModel event) =>
-    DateTime(date.year, event.startDate.month, event.startDate.day) == date &&
-        event.category == EventCategory.birthday)
-        .toList());
+    if (events != null)
+      result.addAll(events
+          .where((EventModel event) =>
+              date.compareTo(event.startDate) >= 0 && date.compareTo(event.endDate) <= 0)
+          .map((event) {
+        return eventCardGenerator(event.name, MarkerType.event);
+      }));
 
-    result.addAll(events.where((EventModel event) {
-      DateTime startDate = event.startDate;
-      DateTime endDate = event.endDate;
+    if (holidays != null)
+      result.addAll(holidays.where((HolidayModel holiday) {
+        DateTime startDate = holiday.startDate;
+        DateTime endDate = holiday.endDate;
 
-      if (event.category != EventCategory.holiday) return false;
+        if (holiday.interval == HolidayIntervalType.once) {
+          if (endDate == null) {
+            return date.compareTo(startDate) == 0;
+          } else {
+            return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
+          }
+        } else if (holiday.interval == HolidayIntervalType.annual) {
+          startDate = DateTime(date.year, startDate.month, startDate.day);
 
-      if (event.interval == IntervalType.once) {
-        if (endDate == null) {
-          return date.compareTo(startDate) == 0;
-        } else {
-          return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
+          if (endDate == null) {
+            return date.compareTo(startDate) == 0;
+          } else {
+            endDate = DateTime(date.year, endDate.month, endDate.day);
+
+            return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
+          }
         }
-      } else if (event.interval == IntervalType.annual) {
-        startDate = DateTime(date.year, startDate.month, startDate.day);
+      }).map((holiday) {
+        return eventCardGenerator(dict.getString(holiday.name), MarkerType.holiday);
+      }));
 
-        if (endDate == null) {
-          return date.compareTo(startDate) == 0;
-        } else {
-          endDate = DateTime(date.year, endDate.month, endDate.day);
-
-          return date.compareTo(startDate) >= 0 && date.compareTo(endDate) <= 0;
-        }
-      }
-    }).toList());
-    lastEvents = result;
+    lastEventWidgets = result;
+    lastDate = date;
     return result;
   }
 }

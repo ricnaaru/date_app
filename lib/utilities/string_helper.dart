@@ -87,4 +87,8 @@ class StringHelper {
 
     return "$number$suffix";
   }
+
+  static String capitalizeFirstLetter(String source) {
+    return "${source[0].toUpperCase()}${source.substring(1)}";
+  }
 }
