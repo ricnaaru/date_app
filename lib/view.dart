@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:date_app/utilities/localization.dart';
 import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_state.dart';
@@ -31,14 +33,16 @@ abstract class View<T extends StatefulWidget> extends State<T> {
     setState(() {});
   }
 
-  Future<void> process(Function f) async {
+  Future<dynamic> process(Function f) async {
     OverlayEntry x = _withLoading ? _showLoading() : null;
 
-    await f();
+    var result = await f();
 
     if (controller.refresh != null) await controller.refresh();
 
     x?.remove();
+
+    return result;
   }
 
   OverlayEntry _showLoading() {
@@ -120,7 +124,9 @@ class FullLoadingState extends State<FullLoading> with TickerProviderStateMixin 
     return Visibility(
       visible: opacityController.value > 0.0,
       child: Positioned.fill(
-          child: Opacity(
+          child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+              child: Opacity(
               opacity: opacityController.value,
               child: Container(
                   color: widget.barrierColor,
@@ -129,7 +135,7 @@ class FullLoadingState extends State<FullLoading> with TickerProviderStateMixin 
                     PitComponents.loadingAssetName,
                     height: widget.height,
                     width: widget.width,
-                  ))))),
+                  )))))),
     );
   }
 }

@@ -36,7 +36,6 @@ class _HomePageState extends View<HomePage> {
     return Refresher(
           onRefresh: () async {
             await _presenter.refreshFeed();
-            await _presenter.refreshEvents();
           },
           child: AdvColumn(
               onlyInner: false,

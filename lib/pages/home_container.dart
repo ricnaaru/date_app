@@ -1,6 +1,7 @@
 import 'package:date_app/application.dart';
 import 'package:date_app/pages/event.dart';
 import 'package:date_app/pages/home.dart';
+import 'package:date_app/pages/my_event.dart';
 import 'package:date_app/presenters/home_container.dart';
 import 'package:date_app/utilities/constants.dart';
 import 'package:date_app/utilities/localization.dart';
@@ -18,6 +19,7 @@ class _HomeContainerPageState extends View<HomeContainerPage>
     with TickerProviderStateMixin
     implements HomeInterface {
   HomePresenter _presenter;
+  List<Widget> _appbar;
   List<Widget> _children;
   AnimationController _fabAnimation;
 
@@ -36,7 +38,13 @@ class _HomeContainerPageState extends View<HomeContainerPage>
     _children = [
       HomePage(_presenter),
       EventPage(_presenter),
+      MyEventPage(_presenter),
     ];
+
+    _appbar = [null, null, AppBar(
+    title: Text(dict.getString("my_event")),
+    elevation: 1.0,
+    )];
 
     Function bottomNavigatorGenerator = (IconData icon, String title) {
       return BottomNavigationBarItem(
@@ -54,13 +62,20 @@ class _HomeContainerPageState extends View<HomeContainerPage>
       );
     };
 
-    return Theme(
-      data: ThemeData(
+    ThemeData themeData = Theme.of(context);
+
+    if (_presenter.currentIndex != 2) {
+      themeData = themeData.copyWith(
         brightness: Brightness.light,
         primaryColorBrightness: Brightness.light,
         accentColorBrightness: Brightness.light,
-      ),
+      );
+    }
+
+    return Theme(
+      data: themeData,
       child: Scaffold(
+        appBar: _appbar[_presenter.currentIndex],
         body: SafeArea(
             child: AdvLoadingWithBarrier(
                 content: _children[_presenter.currentIndex],
@@ -73,7 +88,8 @@ class _HomeContainerPageState extends View<HomeContainerPage>
           // new
           items: [
             bottomNavigatorGenerator(Icons.home, dict.getString("home")),
-            bottomNavigatorGenerator(Icons.event, dict.getString("event")),
+            bottomNavigatorGenerator(Icons.calendar_today, dict.getString("event")),
+            bottomNavigatorGenerator(Icons.event, dict.getString("my_event")),
           ],
         ),
         floatingActionButton: ScaleTransition(
@@ -106,9 +122,13 @@ class _HomeContainerPageState extends View<HomeContainerPage>
   }
 
   @override
-  void resetEvents() {
-    print("resetEvents");
-    _presenter.refreshEvents();
+  Future<void> resetEvents() async {
+    await _presenter.refreshEvents();
+  }
+
+  @override
+  Future<void> resetMyEvents() async {
+    await _presenter.refreshMyEvents();
   }
 }
 

@@ -89,6 +89,7 @@ class DateDict {
       'additional_information': "Informasi Tambahan",
       'address': "Alamat",
       'add_event': "Tambah Acara",
+      'add_note': "Tambah Catatan",
       'add_participants': "Tambah Peserta",
       'add_participants_reorder': "Atur Ulang Peserta",
       'add_position': "Tambah Posisi",
@@ -139,7 +140,7 @@ class DateDict {
       'err_password_not_match': "ID dan Password tidak ditemukan",
       'event': "Acara",
       'event_detail': "Detil Acara",
-      'event_setting': "Pengaturan Acara",
+      'event_position': "Posisi",
       'event_added': "Event telah ditambahkan",
       'from': "Dari",
       'generate': "Generate",
@@ -222,6 +223,19 @@ class DateDict {
       'last_generate_date': "Tanggal Akhir Generate",
       'edit': "Ubah",
       'delete': "Hapus",
+      'err_position_name_empty': "Nama harus diisi!",
+      'err_position_code_empty': "Kode harus diisi!",
+      'err_position_code_duplicate': "Kode Posisi tidak boleh duplikat!",
+      'qty': "Qty",
+      'input_code': "Input Kode",
+      'code': "Kode",
+      'my_event': "Acaraku",
+      "confirm_edit_event_setting": "Untuk mengubah Setting Acara anda, kami akan menghapus Event yang sudah di-generate. Lanjutkan?",
+      "confirmation": "Konfirmasi",
+      "yes": "Ya",
+      "no": "Tidak",
+      'err_event_name_empty': "Nama Acara harus diisi!",
+      'confirm_delete_event_setting': "Anda yakin menghapus Pengaturan Acara ini?",
     },
     'en': {
       'account': "Account",
@@ -229,6 +243,7 @@ class DateDict {
       'additional_information': "Additional Information",
       'address': "Address",
       'add_event': "Add Event",
+      'add_note': "Add Note",
       'add_participants': "Add Participants",
       'add_participants_reorder': "Reorder Participants",
       'add_position': "Add Position",
@@ -293,7 +308,7 @@ class DateDict {
       'input_location': "Input location (Optional)",
       'input_name': "Input name",
       'interval_type': "Interval type",
-      'event_setting': "Event Setting",
+      'event_position': "Event Position",
       'event_added': "Event added",
       'islamic_new_year': "Islamic New Year",
       'isra_miraj': "Isra and Mi'raj",
@@ -357,6 +372,11 @@ class DateDict {
       'login': "Login",
       'register': "Register",
       'err_username_empty': "Please fill username!",
+      'err_position_name_empty': "Name must be filled!",
+      'err_position_code_empty': "Code must be filled!",
+      'err_position_code_duplicate': "Position Code must not duplicate!",
+      'qty': "Qty",
+      'input_code': "Input Code",
       'err_password_empty': "Please fill password!",
       'err_password_not_match': "ID and Password not found",
       'err_duration_and_interval_overlap':
@@ -365,21 +385,46 @@ class DateDict {
       'last_generate_date': "Last Generate Date",
       'edit': "Edit",
       'delete': "Delete",
+      'code': "Code",
+      'my_event': "My Event",
+      "confirm_edit_event_setting": "To edit your Event Setting, we will delete all events that are generated. Continue?",
+      "confirmation": "Confirmation",
+      "yes": "Yes",
+      "no": "No",
+      'err_event_name_empty': "Event Name must be filled!",
+      'confirm_delete_event_setting': "Are you sure to delete this Event Setting?",
     },
   };
 
   String positionNeeded(int qty) {
     if (locale.languageCode == "en") {
       return Intl.plural(
-          qty,
-          one: '$qty person needed',
-          other: '$qty persons needed',
-          name: "positionNeeded",
-          args: [qty],);
+        qty,
+        one: '$qty person needed',
+        other: '$qty persons needed',
+        name: "positionNeeded",
+        args: [qty],
+      );
     } else if (locale.languageCode == "id") {
       return "Dibutuhkan $qty orang";
     } else {
       return "Raw position_needed";
+    }
+  }
+
+  String availabilitiesConfirmed(int qty, int overall) {
+    if (locale.languageCode == "en") {
+      return Intl.plural(
+        overall,
+        one: '$qty of $overall availability confirmed',
+        other: '$qty of $overall availabilities confirmed',
+        name: "availabilitiesConfirmed",
+        args: [qty, overall],
+      );
+    } else if (locale.languageCode == "id") {
+      return "$qty dari $overall orang telah mengkonfirmasi";
+    } else {
+      return "Raw availabilities_confirmed";
     }
   }
 

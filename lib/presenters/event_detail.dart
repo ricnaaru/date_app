@@ -1,5 +1,7 @@
 import 'package:date_app/pages/event_add.dart';
+import 'package:date_app/pages/note_add.dart';
 import 'package:date_app/presenter.dart';
+import 'package:date_app/utilities/firebase_database_engine.dart';
 import 'package:date_app/utilities/routing.dart';
 import 'package:date_app/view.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +16,7 @@ class EventDetailPresenter extends Presenter {
   void handleChatTapped() async {
     if (!view.mounted) return;
 
-//    Routing.push(context, OpenDiscussionPage());
+    Routing.push(context, NoteAddPage());
   }
 
   void handleEventTapped() {

@@ -1,58 +1,79 @@
 import 'package:date_app/application.dart';
+import 'package:date_app/components/mini_checkbox.dart';
 import 'package:date_app/components/toast.dart';
 import 'package:date_app/models.dart';
+import 'package:date_app/pages/event_add_position.dart';
 import 'package:date_app/presenter.dart';
 import 'package:date_app/utilities/firebase_database_engine.dart';
+import 'package:date_app/utilities/routing.dart';
 import 'package:date_app/view.dart';
 import 'package:flutter/material.dart';
+import 'package:pit_components/components/adv_checkbox.dart';
 import 'package:pit_components/components/controllers/adv_increment_controller.dart';
 import 'package:pit_components/components/controllers/adv_text_field_controller.dart';
+import 'package:pit_components/components/extras/roundrect_checkbox.dart';
 
 class EventPositionPresenter extends Presenter {
   EventSettingModel _event;
-  List<AdvTextFieldController> positionControllers;
-  List<AdvIncrementController> totalPositionControllers;
 
   EventPositionPresenter(BuildContext context, View<StatefulWidget> view, {EventSettingModel event})
-      : this._event = event,
+      : this._event = event.copyWith(positions: []),
         super(context, view);
 
   @override
   void init() {
-    positionControllers = [_defaultPositionController()];
-    totalPositionControllers = [_defaultTotalPositionController()];
+
   }
 
-  _defaultPositionController() {
-    return AdvTextFieldController();
-  }
+  void addPosition() async {
+    int participantQty = _event.participants.length;
 
-  _defaultTotalPositionController() {
-    return AdvIncrementController(counter: 1, minCounter: 1, maxCounter: 10);
-  }
+    PositionModel newPosition = await Routing.push(context, EventAddPositionPage(positions: _event.positions, participantQty: participantQty));
 
-  void addPosition() {
-    positionControllers.add(_defaultPositionController());
-    totalPositionControllers.add(_defaultTotalPositionController());
+    if (newPosition != null) {
+      _event.positions.add(newPosition);
+    }
 
     view.refresh();
   }
 
-  void submit() {
-    view.process(() async {
-      List<PositionModel> positions = [];
+  EventSettingModel get event => _event;
 
-      for (int i = 0; i < positionControllers.length; i++) {
-        positions.add(PositionModel(
-          qty: totalPositionControllers[i].counter,
-          name: positionControllers[i].text,
-        ));
-      }
-
-      _event = _event.copyWith(
-        positions: positions,
+  void submit() async {
+    if ((_event.id ?? "").isNotEmpty) {
+      bool confirmed = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          // return object of type Dialog
+          return AlertDialog(
+            title: Text(dict.getString("confirmation")),
+            content: Text(dict.getString("confirm_edit_event_setting")),
+            actions: <Widget>[
+              FlatButton(
+                child: Text(dict.getString("no")),
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+              ),
+              FlatButton(
+                child: Text(dict.getString("yes")),
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+              ),
+            ],
+          );
+        },
       );
 
+      if (!confirmed) return;
+    }
+
+    view.process(() async {
+      if ((_event.id ?? "").isNotEmpty) {
+        await DataEngine.deleteEventSetting(_event.id);
+      }
+//      RoundRectCheckbox(onChanged: (bool value) {}, value: null,);
       await DataEngine.postEventSetting(_event);
 
       application.homeInterface.resetEvents();

@@ -1,4 +1,5 @@
 import 'package:date_app/components/adv_chooser_dialog.dart';
+import 'package:date_app/models.dart';
 import 'package:date_app/presenters/event_add.dart';
 import 'package:date_app/utilities/localization.dart';
 import 'package:date_app/view.dart';
@@ -12,8 +13,9 @@ import 'package:pit_components/components/adv_text_field.dart';
 
 class EventAddPage extends StatefulWidget {
   final DateTime date;
+  final EventSettingModel eventSetting;
 
-  EventAddPage({this.date});
+  EventAddPage({this.date, this.eventSetting}) : assert(date == null || eventSetting == null);
 
   @override
   State<StatefulWidget> createState() => _EventAddPageState();
@@ -26,7 +28,12 @@ class _EventAddPageState extends View<EventAddPage> {
   void initStateWithContext(BuildContext context) {
     super.initStateWithContext(context);
 
-    _presenter = EventAddPresenter(context, this, widget.date);
+    _presenter = EventAddPresenter(
+        context,
+        this,
+        widget.eventSetting == null
+            ? EventAddPresenter.constructModel(widget.date)
+            : widget.eventSetting);
   }
 
   @override
@@ -54,7 +61,7 @@ class _EventAddPageState extends View<EventAddPage> {
                     children: <Widget>[
                       Expanded(
                         child: AdvDatePicker(
-                          selectionType: SelectionType.range,
+                          selectionType: _presenter.endDateController.enable ? SelectionType.range : SelectionType.single,
                           controller: _presenter.startDateController,
                           onChanged: (dates) {
                             _presenter.onDatePicked(dates);
@@ -68,41 +75,41 @@ class _EventAddPageState extends View<EventAddPage> {
                           onChanged: (dates) {
                             _presenter.onDatePicked(dates);
                           },
+                          onToggled: _presenter.onEndDateToggled,
+                        withSwitcher: true,
                         ),
                       ),
                     ],
                   ),
-                  AdvRow(
-                      divider: RowDivider(8.0),
-                      children: [
-                        Expanded(
-                          child: InkWell(
-                            child: IgnorePointer(
-                              ignoring: true,
-                              child: AdvTextField(controller: _presenter.fromTimeController),
-                            ),
-                            onTap: () {
-                              _presenter.pickStartTime();
-                            },
-                          ),
+                  AdvRow(divider: RowDivider(8.0), children: [
+                    Expanded(
+                      child: InkWell(
+                        child: IgnorePointer(
+                          ignoring: true,
+                          child: AdvTextField(controller: _presenter.fromTimeController),
                         ),
-                        Expanded(
-                          child: InkWell(
-                            child: IgnorePointer(
-                              ignoring: true,
-                              child: AdvTextField(controller: _presenter.toTimeController),
-                            ),
-                            onTap: () {
-                              _presenter.pickEndTime();
-                            },
-                          ),
-                        )
-                      ]),
+                        onTap: () {
+                          _presenter.pickStartTime();
+                        },
+                      ),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        child: IgnorePointer(
+                          ignoring: true,
+                          child: AdvTextField(controller: _presenter.toTimeController),
+                        ),
+                        onTap: () {
+                          _presenter.pickEndTime();
+                        },
+                      ),
+                    )
+                  ]),
                   AdvChooserDialog(controller: _presenter.categoryController),
                   AdvChooserDialog(
                     controller: _presenter.periodController,
                     itemChangeListener: (context, oldValue, newValue) {
-                      setState(() {});
+                      _presenter.onPeriodChanged(context, oldValue, newValue);
                     },
                   ),
                   (_presenter.periodController.text == "custom")
@@ -110,10 +117,10 @@ class _EventAddPageState extends View<EventAddPage> {
                       : null,
                   (_presenter.periodController.text != "once")
                       ? AdvDatePicker(
-                    selectionType: SelectionType.single,
-                    controller: _presenter.lastGenerateDateController,
-                    onChanged: _presenter.onLastGenerateDatePicked,
-                  )
+                          selectionType: SelectionType.single,
+                          controller: _presenter.lastGenerateDateController,
+                          onChanged: _presenter.onLastGenerateDatePicked,
+                        )
                       : null,
                 ]),
           ),

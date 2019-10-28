@@ -6,7 +6,7 @@ import 'package:pit_components/components/adv_row.dart';
 
 class CustomDialogInput extends StatelessWidget {
   final String title;
-  final Widget content;
+  final Widget content;floating
   final List<Widget> actions;
 
   CustomDialogInput({this.title, this.content, this.actions});

@@ -448,8 +448,10 @@ class EventSettingModel {
   final IntervalType interval;
   final int customDays;
   final List<PositionModel> positions;
+  final List<AvailabilityModel> availabilities;
   final DateTime startDate;
   final DateTime endDate;
+  final bool oneDayEvent;
   final DateTime lastGenerateDate;
   final String eventMaster;
   final EventStatus eventStatus;
@@ -466,8 +468,10 @@ class EventSettingModel {
     this.interval,
     this.customDays,
     this.positions,
+    this.availabilities,
     this.startDate,
     this.endDate,
+    this.oneDayEvent,
     this.lastGenerateDate,
     this.eventMaster,
     this.eventStatus,
@@ -485,8 +489,10 @@ class EventSettingModel {
       IntervalType interval,
       int customDays,
       List<PositionModel> positions,
+      List<AvailabilityModel> availabilities,
       DateTime startDate,
       DateTime endDate,
+      bool oneDayEvent,
       DateTime lastGenerateDate,
       String eventMaster,
       EventStatus eventStatus}) {
@@ -502,8 +508,10 @@ class EventSettingModel {
         interval: interval ?? this.interval,
         customDays: customDays ?? this.customDays,
         positions: positions ?? this.positions,
+        availabilities: availabilities ?? this.availabilities,
         startDate: startDate ?? this.startDate,
         endDate: endDate ?? this.endDate,
+        oneDayEvent: oneDayEvent ?? this.oneDayEvent,
         lastGenerateDate: lastGenerateDate ?? this.lastGenerateDate,
         eventMaster: eventMaster ?? this.eventMaster,
         eventStatus: eventStatus ?? this.eventStatus);
@@ -512,8 +520,10 @@ class EventSettingModel {
   factory EventSettingModel.fromJson(String id, Map json) {
     Map rawParticipants = json["participants"];
     Map rawPositions = json["positions"];
+    Map rawAvailabilities = json["availabilities"];
     List<ParticipantModel> participants = [];
     List<PositionModel> positions = [];
+    List<AvailabilityModel> availabilities = [];
 
     if (rawParticipants != null)
       rawParticipants.forEach((key, value) {
@@ -525,6 +535,12 @@ class EventSettingModel {
       rawPositions.forEach((key, value) {
         PositionModel position = PositionModel.fromJson(key, value);
         positions.add(position);
+      });
+
+    if (rawAvailabilities != null)
+      rawAvailabilities.forEach((key, value) {
+        AvailabilityModel availability = AvailabilityModel.fromJson(key, value);
+        availabilities.add(availability);
       });
 
     TimeOfDay startTime = DateTimeHelper.convertFromFirebaseTime(json['start_time'] as String);
@@ -542,8 +558,10 @@ class EventSettingModel {
       interval: intervalTypeMap[json['interval'] as String],
       customDays: (json['custom_days'] as num ?? 0).toInt(),
       positions: positions,
+      availabilities: availabilities,
       startDate: DateTimeHelper.convertFromFirebaseDate(json['start_date'] as String),
       endDate: DateTimeHelper.convertFromFirebaseDate(json['end_date'] as String),
+      oneDayEvent: json['one_day_event'] as bool,
       lastGenerateDate:
           DateTimeHelper.convertFromFirebaseDate(json['last_generate_date'] as String),
       eventMaster: json['event_master'] as String,
@@ -582,6 +600,7 @@ class EventSettingModel {
     if ((customDays ?? 0) != 0) result.putIfAbsent("custom_days", () => customDays);
     result.putIfAbsent("start_date", () => DateTimeHelper.convertToFirebaseDate(startDate));
     result.putIfAbsent("end_date", () => DateTimeHelper.convertToFirebaseDate(endDate));
+    result.putIfAbsent("one_day_event", () => oneDayEvent);
     result.putIfAbsent(
         "last_generate_date", () => DateTimeHelper.convertToFirebaseDate(lastGenerateDate));
     result.putIfAbsent("event_master", () => eventMaster);
@@ -605,8 +624,10 @@ class EventSettingModel {
         "participants: $participants, "
         "interval: $interval, "
         "positions: $positions, "
+        "availabilities: $availabilities, "
         "startDate: $startDate, "
         "endDate: $endDate, "
+        "oneDayEvent: $oneDayEvent, "
         "lastGenerateDate: $lastGenerateDate, "
         "eventMaster: $eventMaster)";
   }

@@ -10,12 +10,12 @@ import 'package:flutter/material.dart';
 import 'package:pit_components/components/adv_column.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class PositionCard extends StatelessWidget {
+class EventPositionCard extends StatelessWidget {
   final PositionModel model;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  PositionCard({this.model, this.onEdit, this.onDelete});
+  EventPositionCard({this.model, this.onEdit, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +52,7 @@ class PositionCard extends StatelessWidget {
                           children: [
                         Text(model.name, style: h7, maxLines: 1),
                         model.qty == 0 ? null : Text(dict.positionNeeded(model.qty), style: p4.copyWith(color: Colors.blueGrey)),
-                        SmartText(model.description, maxLines: 2)
+                        SmartText(model.description ?? "", maxLines: 3)
                       ]))
                 ]),
             AdvRow(mainAxisAlignment: MainAxisAlignment.end, divider: RowDivider(8.0), children: [

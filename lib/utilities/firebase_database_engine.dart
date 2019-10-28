@@ -42,9 +42,68 @@ class DataEngine {
     return true;
   }
 
+  static Future<void> deleteEventSetting(String eventSettingKey) async {
+    print("deleteEventSetting");
+    await FirebaseDatabase.instance.reference().child("event_settings/$eventSettingKey").remove();
+    DataSnapshot events = await FirebaseDatabase.instance.reference().child("events").once();
+    Map v = events.value;
+
+    if (v != null) {
+      for (String key in v.keys) {
+        if (v[key]["event_setting_id"] == eventSettingKey) {
+          await FirebaseDatabase.instance.reference().child("events/$key").remove();
+        }
+      }
+    }
+
+    print("v => $v");
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String userId = prefs.getString(prefKeys.kUserId);
+    DataSnapshot eventMasters =
+        await FirebaseDatabase.instance.reference().child("event_masters/$userId").once();
+    List<String> myEvents = List<String>.from(eventMasters.value)
+      ..removeWhere((key) => key == eventSettingKey);
+
+    DatabaseReference eventMastersRef =
+        FirebaseDatabase.instance.reference().child("event_masters/$userId");
+
+    eventMastersRef.set(myEvents);
+
+    print("v => $v");
+//    if (v["event_setting_id"] == key) {
+//      await FirebaseDatabase.instance.reference().child("events/${e.snapshot.key}").remove();
+//    }
+//    /*await x.listen((data) {
+//      Map v = data.snapshot.value;
+//      print("1");
+//      if (v["event_setting_id"] == key) {
+////        await FirebaseDatabase.instance.reference().child("events/${data.snapshot.key}").remove();
+//      }
+////    ini kalo di run event master juga kehapus, kyknya sih gara2 strea, gk bs async
+//      return "a";
+//    }).asFuture()*/;
+//
+//    x.cancel();
+////    print("hasil => $a");
+//    var y = FirebaseDatabase.instance.reference().child("event_masters").onChildAdded.listen((data) async {
+//      List<String> value = List<String>.from(data.snapshot.value);
+//      value.remove(key);
+//      print("mulai delete!");
+//      await FirebaseDatabase.instance.reference().child("event_masters/${data.snapshot.key}").set(value);
+//      print("selesai delete!");
+//
+//      return;
+//    });
+//
+//    y.cancel();
+  }
+
   static Future<String> postEventSetting(EventSettingModel event) async {
-    DatabaseReference eventRef =
-        FirebaseDatabase.instance.reference().child("event_settings").push();
+    DatabaseReference eventRef = event.id == null
+        ? FirebaseDatabase.instance.reference().child("event_settings").push()
+        : FirebaseDatabase.instance.reference().child("event_settings/${event.id}");
 
     await eventRef.set(event.toMap());
 
@@ -58,10 +117,29 @@ class DataEngine {
 
         eachPositionRef.set({
           "name": position.name,
+          "code": position.code,
+          "description": position.description,
           "qty": position.qty,
         });
       }
+    } else {
+      DatabaseReference positionRef = eventRef.child("positions");
+
+      await positionRef.remove();
     }
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String userId = prefs.getString(prefKeys.kUserId);
+
+    var eventMastersSnapshot =
+        await FirebaseDatabase.instance.reference().child("event_masters/$userId").once();
+
+    List<String> eventMasters = List<String>.from(eventMastersSnapshot.value ?? []);
+    eventMasters.add(eventRef.key);
+    print("mulai post!");
+    await FirebaseDatabase.instance.reference().child("event_masters/$userId").set(eventMasters);
+    print("selesai post!");
 
     return eventRef.key;
   }
@@ -96,7 +174,7 @@ class DataEngine {
         realPassword = value;
       }
     });
-    print("$password != $realPassword => $primaryKey");
+
     if (password != realPassword) return false;
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -133,21 +211,32 @@ class DataEngine {
     return result;
   }
 
-  static Future<List<EventSettingModel>> getEventSettings(BuildContext context) async {
+  static Future<List<EventSettingModel>> getMyEventSettings(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    String userId = prefs.getString(prefKeys.kUserId);
+
     DataSnapshot quickEventsRef =
-        await FirebaseDatabase.instance.reference().child("event_settings").once();
+        await FirebaseDatabase.instance.reference().child("event_masters/$userId").once();
 
-    Map v = quickEventsRef.value;
+    List<String> myEventKeys = List<String>.from(quickEventsRef.value ?? []);
 
-    if (v == null) return [];
+    List<EventSettingModel> myEvents = [];
 
-    List<EventSettingModel> events = [];
+    for (String key in myEventKeys) {
+      DataSnapshot data = await FirebaseDatabase.instance
+          .reference()
+          .child("event_settings")
+          .orderByKey()
+          .equalTo(key)
+          .once();
 
-    v.forEach((key, value) {
-      events.add(EventSettingModel.fromJson(key, value));
-    });
+      Map r = data.value;
 
-    return events;
+      myEvents.add(EventSettingModel.fromJson(key, r[key]));
+    }
+
+    return myEvents;
   }
 
   static Future<List<BirthdayModel>> getBirthday(BuildContext context) async {
@@ -169,7 +258,7 @@ class DataEngine {
 
   static Future<List<HolidayModel>> getHoliday(BuildContext context) async {
     DataSnapshot quickEventsRef =
-    await FirebaseDatabase.instance.reference().child("holidays").once();
+        await FirebaseDatabase.instance.reference().child("holidays").once();
 
     Map v = quickEventsRef.value;
 
@@ -185,8 +274,7 @@ class DataEngine {
   }
 
   static Future<List<EventModel>> getEvent(BuildContext context) async {
-    DataSnapshot eventsRef =
-    await FirebaseDatabase.instance.reference().child("events").once();
+    DataSnapshot eventsRef = await FirebaseDatabase.instance.reference().child("events").once();
 
     Map v = eventsRef.value;
 
@@ -319,8 +407,7 @@ class DataEngine {
     }
 
     for (EventModel event in events) {
-      DatabaseReference eventRef =
-      FirebaseDatabase.instance.reference().child("events").push();
+      DatabaseReference eventRef = FirebaseDatabase.instance.reference().child("events").push();
 
       await eventRef.set(event.toMap());
     }

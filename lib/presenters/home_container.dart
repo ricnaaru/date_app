@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 
 abstract class HomeInterface {
   void onDataRefreshed();
-  void resetEvents();
+  Future<void> resetEvents();
+  Future<void> resetMyEvents();
 }
 
 class HomePresenter extends Presenter {
@@ -15,6 +16,7 @@ class HomePresenter extends Presenter {
   List<EventModel> _events;
   List<BirthdayModel> _birthdays;
   List<HolidayModel> _holidays;
+  List<EventSettingModel> _myEvents;
   int currentIndex = 0;
   EventPresenter eventPresenter;
 
@@ -33,6 +35,9 @@ class HomePresenter extends Presenter {
       view.refresh();
     });
     refreshHolidays().then((_) {
+      view.refresh();
+    });
+    refreshMyEvents().then((_) {
       view.refresh();
     });
   }
@@ -61,6 +66,12 @@ class HomePresenter extends Presenter {
     this._birthdays = birthdays;
   }
 
+  Future<void> refreshMyEvents() async {
+    await Future.delayed(Duration(seconds: 2));
+    List<EventSettingModel> myEvents = await DataEngine.getMyEventSettings(context);
+    this._myEvents = myEvents;
+  }
+
   List<NewsFeedModel> get newsFeed => _newsFeed;
 
   List<EventModel> get events => _events;
@@ -68,6 +79,8 @@ class HomePresenter extends Presenter {
   List<BirthdayModel> get birthdays => _birthdays;
 
   List<HolidayModel> get holidays => _holidays;
+
+  List<EventSettingModel> get myEvents => _myEvents;
 
   void onFabTapped() {
     if (currentIndex == 1) {

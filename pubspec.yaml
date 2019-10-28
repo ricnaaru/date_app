@@ -21,7 +21,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2
-  pit_components: ^0.2.8
+  pit_components: ^0.2.10
   shared_preferences: ^0.5.1+2
   firebase_database: ^2.0.2
   firebase_core: ^0.3.1+1
@@ -33,6 +33,10 @@ dependencies:
   smart_text: ^0.0.1+1
   flutter_list_drag_and_drop: ^0.1.6
   flutter_colorpicker: ^0.2.3
+  zefyr:
+    git:
+      url: git://github.com/ricnaaru/zefyr.git
+      path: packages/zefyr
 
 dev_dependencies:
   flutter_test:

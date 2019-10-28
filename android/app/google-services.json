@@ -8,6 +8,42 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:476982417788:android:b4cded9780a8d641",
+        "android_client_info": {
+          "package_name": "com.ric.dateapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "476982417788-an93fkjo67l41aggs6s3fqs546q497b9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQ_njDcO4OgTkQtkd4i6qxFmL3Jg1FRDE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "476982417788-an93fkjo67l41aggs6s3fqs546q497b9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "476982417788-vkjtl37ibj645qfbrn695mi3kh51fu27.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ric.dateapp"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:476982417788:android:31a46ee0feaf156f",
         "android_client_info": {
           "package_name": "ric.com.dateapp"
@@ -25,15 +61,20 @@
         }
       ],
       "services": {
-        "analytics_service": {
-          "status": 1
-        },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
-        },
-        "ads_service": {
-          "status": 2
+          "other_platform_oauth_client": [
+            {
+              "client_id": "476982417788-an93fkjo67l41aggs6s3fqs546q497b9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "476982417788-vkjtl37ibj645qfbrn695mi3kh51fu27.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ric.dateapp"
+              }
+            }
+          ]
         }
       }
     }
